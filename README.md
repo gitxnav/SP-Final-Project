@@ -34,7 +34,7 @@ And once we have it activated, we need to download the packages that are in the 
 pip install -r path/to/requirements.txt
 ```
 
-**Note**. If we download news packages we need to include them in the requirements file. For doing that, one we installed the package, we need to update the `requirements.txt` file:
+**Note**. If we download news packages we need to include them in the requirements file. For doing that, once we installed the package, we need to update the `requirements.txt` file:
 ```python
 pip freeze >> path/to/requirements.txt
 ```
