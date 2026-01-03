@@ -8,31 +8,30 @@ header-includes:
 - \usepackage{xcolor}
 - \usepackage{framed}
 - \usepackage{listings}
-
 ---
 
-# Objective 
+# Objective
 
 Based on the information extracted from [nhs.uk/conditions/kidney-disease](https://www.nhs.uk/conditions/kidney-disease/) the **Chronic Kidney Disease** (CKD) is a long-term condition where damaged kidneys can't effectively filter waste and extra fluid from the blood. It leading to buildup and potential health problems like heart disease, anemia, and high blood pressure, with diabetes and hypertension being leading causes. Often showing few symptoms until advanced stages, requiring lifestyle changes, medications, or, in severe cases, dialysis or transplant to manage its progression.
 
 There are usually no **symptoms of CKD** in the early stages. It may only be diagnosed if you have a blood or urine test for another reason and the results show a possible problem with your kidneys. At a more advanced stage, symptoms can include:
 
-* tiredness
-* swollen ankles, feet or hands
-* shortness of breath
-* feeling sick
-* blood in your pee (urine)
+-   tiredness
+-   swollen ankles, feet or hands
+-   shortness of breath
+-   feeling sick
+-   blood in your pee (urine)
 
 The Chronic kidney disease is **usually caused by other conditions** that put a strain on the kidneys. Often it's the result of a combination of different problems. CKD can be caused by:
 
-* high blood pressure – over time, this can put strain on the small blood vessels in the kidneys and stop the kidneys working properly
-* diabetes – too much glucose in your blood can damage the tiny filters in the kidneys
-* high cholesterol – this can cause a build-up of fatty deposits in the blood vessels supplying your kidneys, which can make it harder for them to work properly
-* kidney infections
-* glomerulonephritis – kidney inflammation
-* autosomal dominant polycystic kidney disease – an inherited condition where growths called cysts develop in the kidneys
-* blockages in the flow of urine – for example, from kidney stones that keep coming back, or an enlarged prostate
-* long-term, regular use of certain medicines – such as lithium and non-steroidal anti-inflammatory drugs (NSAIDs)
+-   high blood pressure – over time, this can put strain on the small blood vessels in the kidneys and stop the kidneys working properly
+-   diabetes – too much glucose in your blood can damage the tiny filters in the kidneys
+-   high cholesterol – this can cause a build-up of fatty deposits in the blood vessels supplying your kidneys, which can make it harder for them to work properly
+-   kidney infections
+-   glomerulonephritis – kidney inflammation
+-   autosomal dominant polycystic kidney disease – an inherited condition where growths called cysts develop in the kidneys
+-   blockages in the flow of urine – for example, from kidney stones that keep coming back, or an enlarged prostate
+-   long-term, regular use of certain medicines – such as lithium and non-steroidal anti-inflammatory drugs (NSAIDs)
 
 CKD **can be diagnosed** using blood and urine tests. These tests look for high levels of certain substances in the blood and urine that are signs your kidneys are not working properly.
 
@@ -42,11 +41,11 @@ The results of the blood and urine tests can be used to tell the stage of your k
 
 There's **no cure for CKD**, but treatment can help relieve the symptoms and stop it getting worse. The treatment will depend on how severe the condition is. The main treatments are:
 
-* lifestyle changes to help you remain as healthy as possible
-* medicine to control associated problems such as high blood pressure and high cholesterol
-* medicine that can help the kidneys keep working for longer
-* dialysis – treatment to replicate some of the kidney's functions (this may be necessary in advanced CKD)
-* kidney transplant – this may also be necessary in advanced CKD
+-   lifestyle changes to help you remain as healthy as possible
+-   medicine to control associated problems such as high blood pressure and high cholesterol
+-   medicine that can help the kidneys keep working for longer
+-   dialysis – treatment to replicate some of the kidney's functions (this may be necessary in advanced CKD)
+-   kidney transplant – this may also be necessary in advanced CKD
 
 CKD can range from a mild condition with no or few symptoms, to a very serious condition where the kidneys stop working, sometimes called kidney failure.
 
@@ -56,19 +55,23 @@ If someone has CKD, even if it's mild, he's at an increased risk of developing o
 
 Cardiovascular disease is one of the main causes of death in people with kidney disease, although healthy lifestyle changes and medicine can help reduce your risk of developing it.
 
-***
+------------------------------------------------------------------------
 
-## Research questions
+## 1. Research questions
 
-1. **How do blood markers (creatinine, urea, hemoglobin) correlate with kidney disease progression?**
-2. **Which combination of features best predicts CKD status?**
-3. **Are there distinct patient clusters based on their biochemical profiles?**
-4. **How do demographic factors (age, hypertension, diabetes) interact with biochemical markers?**
+1.  **How do blood markers (creatinine, urea, hemoglobin) correlate with kidney disease progression?**
+2.  **Which combination of features best predicts CKD status?**
+3.  **Are there distinct patient clusters based on their biochemical profiles?**
+4.  **How do demographic factors (age, hypertension, diabetes) interact with biochemical markers?**
 
-***
+------------------------------------------------------------------------
 
+## 2. Dataset loading
 
-## Dataset loading
+The dataset has been downloaded from [PubMed Central](https://pmc.ncbi.nlm.nih.gov/articles/PMC8757418/) and this study has been replicated to study improvements[^1].
+
+[^1]V. Kumar et al., “The Indian Chronic Kidney Disease (ICKD) study: baseline characteristics,” Clin Kidney J, vol. 15, no. 1, pp. 60–69, Jan. 2022, doi: 10.1093/CKJ/SFAB149.
+  
 
 ```{r}
 library(readr)
@@ -84,9 +87,9 @@ summary(ckd_data)
 head(ckd_data)
 ```
 
-***
+------------------------------------------------------------------------
 
-## Setup and Data Loading
+## 3. Setup and Data Loading
 
 ```{r setup, warning=FALSE, message=FALSE}
 # Load required libraries
@@ -124,10 +127,9 @@ str(ckd_data)
 
 ```
 
-***
+------------------------------------------------------------------------
 
-## Data cleaning
-
+## 4. Data cleaning
 
 ```{r data_cleaning}
 # Display first few rows with original character format
@@ -209,12 +211,367 @@ print("Missing Value Summary:")
 print(missing_df)
 ```
 
-***
+------------------------------------------------------------------------
 
+## 5. Understanding Scatterplots and Bivariate Analysis
 
+```{r scatterplot_basics}
+cat("Scatterplot: A graphical representation showing the relationship between TWO numeric variables.\n")
+cat("Each point represents an observation with coordinates (x, y).\n")
+cat("Used to visualize correlations, clusters, outliers, and patterns.\n\n")
 
+# Basic scatterplot: Age vs Blood Pressure
+ggplot(ckd_clean, aes(x = age, y = bp)) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Scatterplot: Age vs Blood Pressure",
+       subtitle = "Shows relationship between age and blood pressure",
+       x = "Age (years)",
+       y = "Blood Pressure (mm/Hg)") +
+  theme_minimal()
 
+# Interactive scatterplot with color coding by CKD status
+ggplot(ckd_clean, aes(x = age, y = bp, color = status)) +
+  geom_point(alpha = 0.7, size = 2) +
+  scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
+  labs(title = "Age vs Blood Pressure by CKD Status",
+       x = "Age",
+       y = "Blood Pressure",
+       color = "CKD Status") +
+  theme_minimal()
+```
 
+## 6. Correlation Analysis
 
+### Numeric Features Correlation Matrix
 
+```{r correlation_numeric}
+# Select numeric variables
+numeric_vars <- ckd_data %>%
+  select(age, bp, bgr, bu, sc, sod, pot, hemo, pcv, wc, rc) %>%
+  mutate_all(as.numeric)
 
+# Calculate correlation matrix
+cor_matrix <- cor(numeric_vars, use = "pairwise.complete.obs")
+
+# Visualize correlation matrix
+corrplot(cor_matrix, 
+         method = "color",
+         type = "upper",
+         order = "hclust",
+         tl.col = "black",
+         tl.srt = 45,
+         addCoef.col = "black",
+         number.cex = 0.7,
+         title = "Correlation Matrix of Numeric Features",
+         mar = c(0, 0, 2, 0))
+```
+
+------------------------------------------------------------------------
+
+## 7. Creating New Features (Feature Engineering)
+
+```{r feature_engineering}
+# Create new features based on domain knowledge
+ckd_features <- ckd_clean %>%
+  mutate(
+    # 1. Age groups
+    age_group = case_when(
+      age < 18 ~ "Child",
+      age >= 18 & age < 45 ~ "Young Adult",
+      age >= 45 & age < 60 ~ "Middle Aged",
+      age >= 60 ~ "Senior"
+    ),
+    
+    # 2. Blood Pressure categories
+    bp_category = case_when(
+      bp < 90 ~ "Low",
+      bp >= 90 & bp < 120 ~ "Normal",
+      bp >= 120 & bp < 140 ~ "Prehypertension",
+      bp >= 140 ~ "Hypertension"
+    ),
+    
+    # 3. Anemia indicator based on hemoglobin
+    anemia_hemo = ifelse(hemo < 12, "Anemic", "Normal"),
+    
+    # 4. Kidney function ratio (Creatinine/Urea ratio)
+    kidney_ratio = sc/bu,
+    
+    # 5. Electrolyte imbalance flag
+    electrolyte_imbalance = ifelse(sod < 135 | pot > 5.5, "Imbalanced", "Normal"),
+    
+    # 6. Combined risk score
+    risk_score = (as.numeric(htn == "yes") * 2) + 
+                 (as.numeric(dm == "yes") * 2) + 
+                 (as.numeric(age > 60) * 1) +
+                 (as.numeric(sc > 1.2) * 3),
+    
+    # 7. Creatinine clearance estimate (simplified)
+    creatinine_clearance = (140 - age) * (1/ifelse(sc > 0, sc, 1)),
+    
+    # 8. Hemoglobin to PCV ratio
+    hemo_pcv_ratio = hemo/pcv
+  )
+
+# Convert new categorical features to factors
+ckd_features <- ckd_features %>%
+  mutate(
+    age_group = factor(age_group, levels = c("Child", "Young Adult", "Middle Aged", "Senior")),
+    bp_category = factor(bp_category, levels = c("Low", "Normal", "Prehypertension", "Hypertension")),
+    anemia_hemo = factor(anemia_hemo, levels = c("Normal", "Anemic")),
+    electrolyte_imbalance = factor(electrolyte_imbalance, levels = c("Normal", "Imbalanced"))
+  )
+
+# Display new features
+str(ckd_features[, c("age_group", "bp_category", "anemia_hemo", "kidney_ratio", 
+                     "risk_score", "creatinine_clearance")])
+```
+
+## 8. Bivariate Analysis with Scatterplots
+
+```{r bivariate_analysis}
+# Create a comprehensive scatterplot matrix for key numeric variables
+key_vars <- c("age", "bp", "bgr", "bu", "sc", "hemo", "pcv", "status")
+
+scatter_matrix <- ckd_features %>%
+  select(all_of(key_vars)) %>%
+  na.omit()
+
+# Custom scatterplot function
+create_scatterplot <- function(data, x_var, y_var) {
+  ggplot(data, aes_string(x = x_var, y = y_var, color = "status")) +
+    geom_point(alpha = 0.6, size = 2) +
+    geom_smooth(method = "lm", se = FALSE, alpha = 0.3) +
+    scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
+    labs(title = paste(y_var, "vs", x_var),
+         x = x_var,
+         y = y_var) +
+    theme_minimal() +
+    theme(legend.position = "none")
+}
+
+# Create multiple scatterplots
+p1 <- create_scatterplot(ckd_features, "age", "sc")
+p2 <- create_scatterplot(ckd_features, "age", "hemo")
+p3 <- create_scatterplot(ckd_features, "bp", "bu")
+p4 <- create_scatterplot(ckd_features, "sc", "hemo")
+
+# Arrange in grid
+grid.arrange(p1, p2, p3, p4, ncol = 2, 
+             top = "Bivariate Analysis: Relationships Between Key Variables")
+
+# Interactive scatterplot with size encoding
+ggplot(ckd_features, aes(x = sc, y = hemo, color = status, size = age)) +
+  geom_point(alpha = 0.7) +
+  scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
+  labs(title = "Scatterplot with Size Encoding",
+       subtitle = "Size represents age, color represents CKD status",
+       x = "Serum Creatinine",
+       y = "Hemoglobin") +
+  theme_minimal()
+```
+
+## 9. Correlation Analysis
+
+```{r correlation_analysis}
+# Calculate correlations for numeric variables
+numeric_data <- ckd_features %>%
+  select(all_of(numeric_cols)) %>%
+  mutate_all(as.numeric)
+
+# Pairwise correlation matrix
+cor_matrix <- cor(numeric_data, use = "pairwise.complete.obs")
+
+# Visualize correlation matrix
+corrplot(cor_matrix, 
+         method = "color",
+         type = "upper",
+         order = "hclust",
+         tl.col = "black",
+         tl.srt = 45,
+         addCoef.col = "black",
+         number.cex = 0.7,
+         title = "Correlation Matrix of Numeric Features",
+         mar = c(0, 0, 2, 0))
+
+# Create correlation heatmap
+cor_melt <- as.data.frame(as.table(cor_matrix)) %>%
+  filter(!is.na(Freq)) %>%
+  mutate(abs_cor = abs(Freq))
+
+ggplot(cor_melt, aes(Var1, Var2, fill = Freq)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                      midpoint = 0, limit = c(-1, 1)) +
+  geom_text(aes(label = round(Freq, 2)), color = "black", size = 3) +
+  labs(title = "Correlation Heatmap",
+       x = "",
+       y = "",
+       fill = "Correlation") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## 10. Linear Modeling
+
+```{r linear_models}
+# Handle missing data for modeling
+ckd_model <- ckd_features %>%
+  select(age, bp, bgr, bu, sc, sod, pot, hemo, pcv, status) %>%
+  na.omit()
+
+# Convert status to numeric for correlation
+ckd_model$status_numeric <- as.numeric(ckd_model$status == "ckd")
+
+# 1. Simple linear regression: Hemoglobin vs CKD status
+lm1 <- lm(hemo ~ status_numeric, data = ckd_model)
+summary(lm1)
+
+# Visualize the linear relationship
+ggplot(ckd_model, aes(x = status_numeric, y = hemo)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  scale_x_continuous(breaks = c(0, 1), labels = c("No CKD", "CKD")) +
+  labs(title = "Linear Model: Hemoglobin vs CKD Status",
+       subtitle = paste("R-squared:", round(summary(lm1)$r.squared, 3)),
+       x = "CKD Status",
+       y = "Hemoglobin") +
+  theme_minimal()
+
+# 2. Multiple linear regression
+lm2 <- lm(status_numeric ~ age + bp + sc + hemo + bu, data = ckd_model)
+summary(lm2)
+
+# Extract coefficients
+coef_df <- data.frame(
+  Feature = names(coef(lm2)),
+  Coefficient = coef(lm2),
+  Significance = summary(lm2)$coefficients[,4]
+) %>%
+  arrange(desc(abs(Coefficient)))
+
+print("Multiple Regression Coefficients:")
+print(coef_df)
+
+# 3. Compare multiple models
+models <- list(
+  "Age Only" = lm(status_numeric ~ age, data = ckd_model),
+  "SC Only" = lm(status_numeric ~ sc, data = ckd_model),
+  "Hemo Only" = lm(status_numeric ~ hemo, data = ckd_model),
+  "Age + SC" = lm(status_numeric ~ age + sc, data = ckd_model),
+  "Full Model" = lm(status_numeric ~ age + bp + sc + hemo + bu, data = ckd_model)
+)
+
+# Compare R-squared values
+r_squared <- sapply(models, function(m) summary(m)$r.squared)
+r_squared_df <- data.frame(
+  Model = names(r_squared),
+  R_Squared = r_squared
+) %>%
+  arrange(desc(R_Squared))
+
+ggplot(r_squared_df, aes(x = reorder(Model, R_Squared), y = R_Squared)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Model Comparison by R-Squared",
+       x = "Model",
+       y = "R-Squared") +
+  theme_minimal()
+```
+
+## 11. Advanced Scatterplot Techniques
+
+```{r advanced_scatterplots}
+# 1. Scatterplot with marginal histograms
+if(require(ggExtra)) {
+  library(ggExtra)
+  
+  p <- ggplot(ckd_features, aes(x = sc, y = hemo, color = status)) +
+    geom_point(alpha = 0.7) +
+    scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
+    labs(title = "Scatterplot with Marginal Histograms",
+         x = "Serum Creatinine",
+         y = "Hemoglobin") +
+    theme_minimal()
+  
+  ggMarginal(p, type = "histogram", fill = "lightblue")
+}
+
+# 2. Faceted scatterplot by age group
+ggplot(ckd_features, aes(x = sc, y = hemo, color = status)) +
+  geom_point(alpha = 0.6) +
+  facet_wrap(~age_group) +
+  scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
+  labs(title = "Scatterplot Faceted by Age Group",
+       subtitle = "Relationship between Creatinine and Hemoglobin across age groups",
+       x = "Serum Creatinine",
+       y = "Hemoglobin") +
+  theme_minimal()
+
+# 3. 3D-like scatterplot using size and alpha
+ggplot(ckd_features, aes(x = sc, y = hemo, size = age, alpha = bu, color = status)) +
+  geom_point() +
+  scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
+  scale_size(range = c(1, 10)) +
+  labs(title = "Multidimensional Scatterplot",
+       subtitle = "Size = Age, Transparency = Blood Urea, Color = CKD Status",
+       x = "Serum Creatinine",
+       y = "Hemoglobin") +
+  theme_minimal()
+
+# 4. Scatterplot with regression lines by group
+ggplot(ckd_features, aes(x = age, y = sc, color = status)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
+  labs(title = "Scatterplot with Group-Specific Regression Lines",
+       x = "Age",
+       y = "Serum Creatinine") +
+  theme_minimal()
+
+# 5. Bubble chart (scatterplot with categorical third variable)
+ckd_features %>%
+  group_by(age_group, bp_category) %>%
+  summarise(
+    avg_sc = mean(sc, na.rm = TRUE),
+    avg_hemo = mean(hemo, na.rm = TRUE),
+    count = n()
+  ) %>%
+  ggplot(aes(x = avg_sc, y = avg_hemo, size = count, color = age_group)) +
+  geom_point(alpha = 0.7) +
+  geom_text(aes(label = bp_category), size = 3, vjust = 1.5) +
+  labs(title = "Bubble Chart: Average Values by Age and BP Groups",
+       x = "Average Serum Creatinine",
+       y = "Average Hemoglobin",
+       size = "Number of Patients",
+       color = "Age Group") +
+  theme_minimal()
+```
+
+## 12. Correlation Insights and New Feature Evaluation
+
+```{r correlation_insights}
+# Calculate correlations for new features
+new_features_cor <- ckd_features %>%
+  select(status_numeric = as.numeric(status == "ckd"), 
+         risk_score, kidney_ratio, creatinine_clearance, hemo_pcv_ratio) %>%
+  cor(use = "pairwise.complete.obs")
+
+print("Correlation of New Features with CKD Status:")
+print(round(new_features_cor[1,], 3))
+
+# Visualize effectiveness of new features
+feature_evaluation <- data.frame(
+  Feature = c("risk_score", "kidney_ratio", "creatinine_clearance", "hemo_pcv_ratio"),
+  Correlation = new_features_cor[1, 2:5]
+) %>%
+  arrange(desc(abs(Correlation)))
+
+ggplot(feature_evaluation, aes(x = reorder(Feature, Correlation), y = Correlation)) +
+  geom_bar(stat = "identity", fill = "darkorange") +
+  coord_flip() +
+  labs(title = "Correlation of Engineered Features with CKD Status",
+       x = "Feature",
+       y = "Correlation Coefficient") +
+  theme_minimal()
+```
