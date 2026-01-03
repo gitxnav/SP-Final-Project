@@ -65,8 +65,151 @@ Cardiovascular disease is one of the main causes of death in people with kidney 
 3. **Are there distinct patient clusters based on their biochemical profiles?**
 4. **How do demographic factors (age, hypertension, diabetes) interact with biochemical markers?**
 
+***
 
 
+## Dataset loading
+
+```{r}
+library(readr)
+setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
+ckd_data <- read_csv("data/raw/chronic_kindey_disease.csv")
+```
+
+```{r}
+summary(ckd_data)
+```
+
+```{r}
+head(ckd_data)
+```
+
+***
+
+## Setup and Data Loading
+
+```{r setup, warning=FALSE, message=FALSE}
+# Load required libraries
+library(tidyverse)
+library(corrplot)
+library(ggplot2)
+library(gridExtra)
+library(caret)
+library(mice)
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+# Set seed for reproducibility
+set.seed(17)
+
+# Read data
+setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
+ckd_data <- read.table("data/raw/chronic_kindey_disease.csv", 
+                       sep = ",", 
+                       header = FALSE, 
+                       na.strings = c("?", "NA", ""),
+                       stringsAsFactors = FALSE)
+
+# Set column names based on dataset description
+col_names <- c("age", "bp", "sg", "al", "su", "rbc", "pc", "pcc", "ba", "bgr",
+               "bu", "sc", "sod", "pot", "hemo", "pcv", "wbcc", "rbcc",
+               "htn", "dm", "cad", "appet", "pe", "ane", "status")
+
+names(ckd_data) <- col_names
+
+# Check structure
+str(ckd_data)
+
+```
+
+***
+
+## Data cleaning
+
+
+```{r data_cleaning}
+# Display first few rows with original character format
+head(ckd_data)
+
+# Function to clean and convert numeric columns
+clean_numeric <- function(x) {
+  # Remove any non-numeric characters except decimal points and minus signs
+  x_clean <- gsub("[^0-9.-]", "", x)
+  # Convert to numeric
+  as.numeric(x_clean)
+}
+
+# Function to clean factor columns
+clean_factor <- function(x, levels = NULL) {
+  # Trim whitespace
+  x_clean <- trimws(x)
+  # Convert to factor
+  if(is.null(levels)) {
+    factor(x_clean)
+  } else {
+    factor(x_clean, levels = levels)
+  }
+}
+
+# Identify numeric and factor columns based on dataset description
+numeric_cols <- c("age", "bp", "bgr", "bu", "sc", "sod", "pot", 
+                  "hemo", "pcv", "wbcc", "rbcc")
+
+factor_cols <- c("sg", "al", "su", "rbc", "pc", "pcc", "ba", 
+                 "htn", "dm", "cad", "appet", "pe", "ane", "status")
+
+# Apply cleaning
+ckd_clean <- ckd_data
+
+# Clean numeric columns
+for(col in numeric_cols) {
+  ckd_clean[[col]] <- clean_numeric(ckd_clean[[col]])
+}
+
+# Clean factor columns with appropriate levels
+factor_levels <- list(
+  sg = c("1.005", "1.010", "1.015", "1.020", "1.025"),
+  al = c("0", "1", "2", "3", "4", "5"),
+  su = c("0", "1", "2", "3", "4", "5"),
+  rbc = c("normal", "abnormal"),
+  pc = c("normal", "abnormal"),
+  pcc = c("present", "notpresent"),
+  ba = c("present", "notpresent"),
+  htn = c("yes", "no"),
+  dm = c("yes", "no"),
+  cad = c("yes", "no"),
+  appet = c("good", "poor"),
+  pe = c("yes", "no"),
+  ane = c("yes", "no"),
+  status = c("ckd", "notckd")
+)
+
+for(col in factor_cols) {
+  ckd_clean[[col]] <- clean_factor(ckd_clean[[col]], factor_levels[[col]])
+}
+
+# Check the cleaned data structure
+str(ckd_clean)
+
+# Summary statistics
+summary(ckd_clean)
+
+# Check missing values
+missing_summary <- sapply(ckd_clean, function(x) sum(is.na(x)))
+missing_df <- data.frame(
+  Column = names(missing_summary),
+  Missing_Count = missing_summary,
+  Missing_Percent = round(missing_summary/nrow(ckd_clean)*100, 2)
+) %>%
+  arrange(desc(Missing_Count))
+
+print("Missing Value Summary:")
+print(missing_df)
+```
+
+***
 
 
 
