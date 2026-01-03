@@ -1,0 +1,77 @@
+---
+title: 'Final Project'
+author: ".."
+email: ".."
+date: "January 23, 2025"
+output: pdf_document
+header-includes:
+- \usepackage{xcolor}
+- \usepackage{framed}
+- \usepackage{listings}
+
+---
+
+# Objective 
+
+Based on the information extracted from [nhs.uk/conditions/kidney-disease](https://www.nhs.uk/conditions/kidney-disease/) the **Chronic Kidney Disease** (CKD) is a long-term condition where damaged kidneys can't effectively filter waste and extra fluid from the blood. It leading to buildup and potential health problems like heart disease, anemia, and high blood pressure, with diabetes and hypertension being leading causes. Often showing few symptoms until advanced stages, requiring lifestyle changes, medications, or, in severe cases, dialysis or transplant to manage its progression.
+
+There are usually no **symptoms of CKD** in the early stages. It may only be diagnosed if you have a blood or urine test for another reason and the results show a possible problem with your kidneys. At a more advanced stage, symptoms can include:
+
+* tiredness
+* swollen ankles, feet or hands
+* shortness of breath
+* feeling sick
+* blood in your pee (urine)
+
+The Chronic kidney disease is **usually caused by other conditions** that put a strain on the kidneys. Often it's the result of a combination of different problems. CKD can be caused by:
+
+* high blood pressure – over time, this can put strain on the small blood vessels in the kidneys and stop the kidneys working properly
+* diabetes – too much glucose in your blood can damage the tiny filters in the kidneys
+* high cholesterol – this can cause a build-up of fatty deposits in the blood vessels supplying your kidneys, which can make it harder for them to work properly
+* kidney infections
+* glomerulonephritis – kidney inflammation
+* autosomal dominant polycystic kidney disease – an inherited condition where growths called cysts develop in the kidneys
+* blockages in the flow of urine – for example, from kidney stones that keep coming back, or an enlarged prostate
+* long-term, regular use of certain medicines – such as lithium and non-steroidal anti-inflammatory drugs (NSAIDs)
+
+CKD **can be diagnosed** using blood and urine tests. These tests look for high levels of certain substances in the blood and urine that are signs your kidneys are not working properly.
+
+If the person at a high risk of developing kidney disease (for example, it has a known risk factor such as high blood pressure or diabetes), he may be advised to have regular tests to check for CKD so it's found at an early stage.
+
+The results of the blood and urine tests can be used to tell the stage of your kidney disease. This is a number that reflects how severe the damage to your kidneys is, with a higher number indicating more serious CKD.
+
+There's **no cure for CKD**, but treatment can help relieve the symptoms and stop it getting worse. The treatment will depend on how severe the condition is. The main treatments are:
+
+* lifestyle changes to help you remain as healthy as possible
+* medicine to control associated problems such as high blood pressure and high cholesterol
+* medicine that can help the kidneys keep working for longer
+* dialysis – treatment to replicate some of the kidney's functions (this may be necessary in advanced CKD)
+* kidney transplant – this may also be necessary in advanced CKD
+
+CKD can range from a mild condition with no or few symptoms, to a very serious condition where the kidneys stop working, sometimes called kidney failure.
+
+Most people with CKD will be able to control their condition with medicine and regular check-ups. CKD only progresses to kidney failure in around 2 in 100 people with the condition.
+
+If someone has CKD, even if it's mild, he's at an increased risk of developing other serious problems, such as cardiovascular disease. This is a group of conditions affecting the heart and blood vessels, which includes heart attack and stroke.
+
+Cardiovascular disease is one of the main causes of death in people with kidney disease, although healthy lifestyle changes and medicine can help reduce your risk of developing it.
+
+***
+
+## Research questions
+
+1. **How do blood markers (creatinine, urea, hemoglobin) correlate with kidney disease progression?**
+2. **Which combination of features best predicts CKD status?**
+3. **Are there distinct patient clusters based on their biochemical profiles?**
+4. **How do demographic factors (age, hypertension, diabetes) interact with biochemical markers?**
+
+
+
+
+
+
+
+
+
+
+
