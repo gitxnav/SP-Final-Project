@@ -360,7 +360,7 @@ imputed_data <- mice(ckd_clean,
                      m = 5, 
                      maxit = 50, 
                      method = 'pmm', 
-                     seed = 500)
+                     seed = 42)
 
 # Extract first imputed dataset
 ckd_imputed <- complete(imputed_data, 1)
@@ -368,6 +368,15 @@ ckd_imputed <- complete(imputed_data, 1)
 # Check imputation quality
 cat("\nMissing values after imputation:", sum(is.na(ckd_imputed)), "\n")
 ```
+
+
+```{r}
+
+```
+
+
+
+
 ------------------------------------------------------------------------
 
 ## 5. Understanding Scatterplots and Bivariate Analysis
@@ -499,6 +508,10 @@ comparison_table <- create_comparison_table(ckd_imputed)
 print("Comprehensive Cohort Comparison Table:")
 print(comparison_table %>% arrange(P_Value))
 ```
+
+
+
+
 
 ```{r visual_cohort_comparison}
 # 1. Age distribution by cohort
@@ -868,7 +881,7 @@ grid.arrange(p1, p2, p3, p4, ncol = 2,
 
 ------------------------------------------------------------------------
 
-## 7. Creating New Features (Feature Engineering)
+## 11. Creating New Features (Feature Engineering)
 
 ```{r feature_engineering}
 # Create new features based on domain knowledge
@@ -926,7 +939,7 @@ str(ckd_features[, c("age_group", "bp_category", "anemia_hemo", "kidney_ratio",
                      "risk_score", "creatinine_clearance")])
 ```
 
-## 8. Bivariate Analysis with Scatterplots
+## 12. Bivariate Analysis with Scatterplots
 
 ```{r bivariate_analysis}
 # Create a comprehensive scatterplot matrix for key numeric variables
@@ -967,171 +980,6 @@ ggplot(ckd_features, aes(x = sc, y = hemo, color = status, size = age)) +
        subtitle = "Size represents age, color represents CKD status",
        x = "Serum Creatinine",
        y = "Hemoglobin") +
-  theme_minimal()
-```
-
-
-## 10. Linear Modeling
-
-```{r linear_models}
-# Handle missing data for modeling
-ckd_model <- ckd_features %>%
-  select(age, bp, bgr, bu, sc, sod, pot, hemo, pcv, status) %>%
-  na.omit()
-
-# Convert status to numeric for correlation
-ckd_model$status_numeric <- as.numeric(ckd_model$status == "ckd")
-
-# 1. Simple linear regression: Hemoglobin vs CKD status
-lm1 <- lm(hemo ~ status_numeric, data = ckd_model)
-summary(lm1)
-
-# Visualize the linear relationship
-ggplot(ckd_model, aes(x = status_numeric, y = hemo)) +
-  geom_point(alpha = 0.5) +
-  geom_smooth(method = "lm", se = TRUE, color = "blue") +
-  scale_x_continuous(breaks = c(0, 1), labels = c("No CKD", "CKD")) +
-  labs(title = "Linear Model: Hemoglobin vs CKD Status",
-       subtitle = paste("R-squared:", round(summary(lm1)$r.squared, 3)),
-       x = "CKD Status",
-       y = "Hemoglobin") +
-  theme_minimal()
-
-# 2. Multiple linear regression
-lm2 <- lm(status_numeric ~ age + bp + sc + hemo + bu, data = ckd_model)
-summary(lm2)
-
-# Extract coefficients
-coef_df <- data.frame(
-  Feature = names(coef(lm2)),
-  Coefficient = coef(lm2),
-  Significance = summary(lm2)$coefficients[,4]
-) %>%
-  arrange(desc(abs(Coefficient)))
-
-print("Multiple Regression Coefficients:")
-print(coef_df)
-
-# 3. Compare multiple models
-models <- list(
-  "Age Only" = lm(status_numeric ~ age, data = ckd_model),
-  "SC Only" = lm(status_numeric ~ sc, data = ckd_model),
-  "Hemo Only" = lm(status_numeric ~ hemo, data = ckd_model),
-  "Age + SC" = lm(status_numeric ~ age + sc, data = ckd_model),
-  "Full Model" = lm(status_numeric ~ age + bp + sc + hemo + bu, data = ckd_model)
-)
-
-# Compare R-squared values
-r_squared <- sapply(models, function(m) summary(m)$r.squared)
-r_squared_df <- data.frame(
-  Model = names(r_squared),
-  R_Squared = r_squared
-) %>%
-  arrange(desc(R_Squared))
-
-ggplot(r_squared_df, aes(x = reorder(Model, R_Squared), y = R_Squared)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  coord_flip() +
-  labs(title = "Model Comparison by R-Squared",
-       x = "Model",
-       y = "R-Squared") +
-  theme_minimal()
-```
-
-## 11. Advanced Scatterplot Techniques
-
-```{r advanced_scatterplots}
-# 1. Scatterplot with marginal histograms
-if(require(ggExtra)) {
-  library(ggExtra)
-  
-  p <- ggplot(ckd_features, aes(x = sc, y = hemo, color = status)) +
-    geom_point(alpha = 0.7) +
-    scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
-    labs(title = "Scatterplot with Marginal Histograms",
-         x = "Serum Creatinine",
-         y = "Hemoglobin") +
-    theme_minimal()
-  
-  ggMarginal(p, type = "histogram", fill = "lightblue")
-}
-
-# 2. Faceted scatterplot by age group
-ggplot(ckd_features, aes(x = sc, y = hemo, color = status)) +
-  geom_point(alpha = 0.6) +
-  facet_wrap(~age_group) +
-  scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
-  labs(title = "Scatterplot Faceted by Age Group",
-       subtitle = "Relationship between Creatinine and Hemoglobin across age groups",
-       x = "Serum Creatinine",
-       y = "Hemoglobin") +
-  theme_minimal()
-
-# 3. 3D-like scatterplot using size and alpha
-ggplot(ckd_features, aes(x = sc, y = hemo, size = age, alpha = bu, color = status)) +
-  geom_point() +
-  scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
-  scale_size(range = c(1, 10)) +
-  labs(title = "Multidimensional Scatterplot",
-       subtitle = "Size = Age, Transparency = Blood Urea, Color = CKD Status",
-       x = "Serum Creatinine",
-       y = "Hemoglobin") +
-  theme_minimal()
-
-# 4. Scatterplot with regression lines by group
-ggplot(ckd_features, aes(x = age, y = sc, color = status)) +
-  geom_point(alpha = 0.5) +
-  geom_smooth(method = "lm", se = FALSE) +
-  scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
-  labs(title = "Scatterplot with Group-Specific Regression Lines",
-       x = "Age",
-       y = "Serum Creatinine") +
-  theme_minimal()
-
-# 5. Bubble chart (scatterplot with categorical third variable)
-ckd_features %>%
-  group_by(age_group, bp_category) %>%
-  summarise(
-    avg_sc = mean(sc, na.rm = TRUE),
-    avg_hemo = mean(hemo, na.rm = TRUE),
-    count = n()
-  ) %>%
-  ggplot(aes(x = avg_sc, y = avg_hemo, size = count, color = age_group)) +
-  geom_point(alpha = 0.7) +
-  geom_text(aes(label = bp_category), size = 3, vjust = 1.5) +
-  labs(title = "Bubble Chart: Average Values by Age and BP Groups",
-       x = "Average Serum Creatinine",
-       y = "Average Hemoglobin",
-       size = "Number of Patients",
-       color = "Age Group") +
-  theme_minimal()
-```
-
-## 12. Correlation Insights and New Feature Evaluation
-
-```{r correlation_insights}
-# Calculate correlations for new features
-new_features_cor <- ckd_features %>%
-  select(status_numeric = as.numeric(status == "ckd"), 
-         risk_score, kidney_ratio, creatinine_clearance, hemo_pcv_ratio) %>%
-  cor(use = "pairwise.complete.obs")
-
-print("Correlation of New Features with CKD Status:")
-print(round(new_features_cor[1,], 3))
-
-# Visualize effectiveness of new features
-feature_evaluation <- data.frame(
-  Feature = c("risk_score", "kidney_ratio", "creatinine_clearance", "hemo_pcv_ratio"),
-  Correlation = new_features_cor[1, 2:5]
-) %>%
-  arrange(desc(abs(Correlation)))
-
-ggplot(feature_evaluation, aes(x = reorder(Feature, Correlation), y = Correlation)) +
-  geom_bar(stat = "identity", fill = "darkorange") +
-  coord_flip() +
-  labs(title = "Correlation of Engineered Features with CKD Status",
-       x = "Feature",
-       y = "Correlation Coefficient") +
   theme_minimal()
 ```
 
