@@ -1,6 +1,6 @@
 ---
-title: "Final Project"
-author: ".."
+title: "Final Project - Data Analysis"
+author: "Marco Russo"
 date: "January 23, 2026"
 output:
   pdf_document: default
@@ -329,6 +329,8 @@ cat("\nSummary Statistics:\n")
 summary(ckd_clean)
 ```
 
+
+
 ```{r missing_analysis}
 ## Missing Data Analysis and Imputation
 
@@ -353,7 +355,10 @@ missing_plot <-  aggr(ckd_clean,
                      cex.axis = .7,
                      gap = 3, 
                      ylab = c("Missing data pattern", "Pattern"))
+```
 
+
+```{r}
 # Multiple imputation using MICE
 cat("\nPerforming Multiple Imputation...\n")
 imputed_data <- mice(ckd_clean, 
@@ -371,6 +376,14 @@ cat("\nMissing values after imputation:", sum(is.na(ckd_imputed)), "\n")
 
 
 ```{r}
+setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
+write_csv(ckd_imputed, "data/processed/dataset_mice_imputed.csv",
+          progress = show_progress())
+```
+```{r}
+null_values <- colSums(is.na(ckd_imputed))
+print(null_values)
+
 
 ```
 
@@ -984,4 +997,11 @@ ggplot(ckd_features, aes(x = sc, y = hemo, color = status, size = age)) +
 ```
 
 
+
+***
+
+TBD
+
+
+## 10. Linear Modeling
 
