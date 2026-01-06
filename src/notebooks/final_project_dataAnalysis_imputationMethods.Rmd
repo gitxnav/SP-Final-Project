@@ -77,8 +77,10 @@ The dataset has been downloaded from [PubMed Central](https://pmc.ncbi.nlm.nih.g
 
 [^1]V. Kumar et al., “The Indian Chronic Kidney Disease (ICKD) study: baseline characteristics,” Clin Kidney J, vol. 15, no. 1, pp. 60–69, Jan. 2022, doi: 10.1093/CKJ/SFAB149.
   
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, 
+                      fig.width = 10, fig.height = 6)
 ```
 
 ```{r}
@@ -97,7 +99,7 @@ head(ckd_data)
 
 **Attribute Information**
 
-## Data Set Information:
+## 2.1 Data Set Information:
 
 We use the following representation to collect the dataset:-
 
@@ -130,7 +132,7 @@ We use the following representation to collect the dataset:-
 
 **Additional Feature Details**
 
-## Attribute Information:
+## 2.2 Attribute Information:
 
 We use 24 + class = 25 ( 11 numeric ,14 nominal)
 
@@ -179,6 +181,15 @@ if (!require("mice")) install.packages("mice")
 if (!require("dplyr")) install.packages("dplyr")
 if (!require("tidyr")) install.packages("tidyr")
 if (!require("lattice")) install.packages("lattice")
+if (!require("GGally")) install.packages("GGally")
+if (!require("VIM")) install.packages("VIM")
+if (!require("psych")) install.packages("psych")
+if (!require("car")) install.packages("car")
+if (!require("factoextra")) install.packages("factoextra")
+if (!require("pROC")) install.packages("pROC")
+if (!require("ggpubr")) install.packages("ggpubr")
+if (!require("rstatix")) install.packages("rstatix")
+
 library(tidyverse)
 library(corrplot)
 library(ggplot2)
@@ -189,14 +200,6 @@ library(dplyr)
 library(tidyr)
 library(lattice)
 
-if (!require("GGally")) install.packages("GGally")
-if (!require("VIM")) install.packages("VIM")
-if (!require("psych")) install.packages("psych")
-if (!require("car")) install.packages("car")
-if (!require("factoextra")) install.packages("factoextra")
-if (!require("pROC")) install.packages("pROC")
-if (!require("ggpubr")) install.packages("ggpubr")
-if (!require("rstatix")) install.packages("rstatix")
 library(GGally)
 library(VIM)
 library(psych)
@@ -235,9 +238,9 @@ str(ckd_data)
 
 ```
 
-------------------------------------------------------------------------
+***
 
-## 4. Data cleaning
+# 4. Data cleaning
 
 
 ```{r}
@@ -277,6 +280,18 @@ clean_numeric <- function(x) {
   x_clean <- gsub("[^0-9.-]", "", x)
   # Convert to numeric
   as.numeric(x_clean)
+}
+
+# Function to clean factor columns
+clean_factor <- function(x, levels = NULL) {
+  # Trim whitespace
+  x_clean <- trimws(x)
+  # Convert to factor
+  if(is.null(levels)) {
+    factor(x_clean)
+  } else {
+    factor(x_clean, levels = levels)
+  }
 }
 
 # Identify numeric and factor columns based on dataset description
@@ -347,8 +362,27 @@ str(ckd_clean)
 cat("\nSummary Statistics:\n")
 summary(ckd_clean)
 ```
+## 4.1 IMPUTATION
 
+### The MICE Algorithm
 
+Multiple Imputation by Chained Equations is a robust, informative method of dealing with missing data in datasets. The procedure ‘fills in’ (imputes) missing data in a dataset through an iterative series of predictive models. In each iteration, each specified variable in the dataset is imputed using the other variables in the dataset. These iterations should be run until it appears that convergence has been met.
+
+**Data Leakage**:
+
+MICE is particularly useful if missing values are associated with the target variable in a way that introduces leakage. For instance, let’s say you wanted to model customer retention at the time of sign up. A certain variable is collected at sign up or 1 month after sign up. The absence of that variable is a data leak, since it tells you that the customer did not retain for 1 month.
+
+**Funnel Analysis**:
+
+Information is often collected at different stages of a ‘funnel’. MICE can be used to make educated guesses about the characteristics of entities at different points in a funnel.
+
+**Confidence Intervals**:
+
+MICE can be used to impute missing values, however it is important to keep in mind that these imputed values are a prediction. Creating multiple datasets with different imputed values allows you to do two types of inference:
+
+* Imputed Value Distribution: A profile can be built for each imputed value, allowing you to make statements about the likely distribution of that value.
+
+* Model Prediction Distribution: With multiple datasets, you can build multiple models and create a distribution of predictions for each sample. Those samples with imputed values which were not able to be imputed with much confidence would have a larger variance in their predictions.
 
 ```{r missing_analysis}
 ## Missing Data Analysis and Imputation
@@ -375,6 +409,9 @@ missing_plot <-  aggr(ckd_clean,
                      gap = 3, 
                      ylab = c("Missing data pattern", "Pattern"))
 ```
+> defaultMethod = c("pmm", "logreg", "polyreg", "polr")
+A vector of length 4 containing the default imputation methods for 1) numeric data, 2) factor data with 2 levels, 3) factor data with > 2 unordered levels, and 4) factor data with > 2 ordered levels. By default, the method uses pmm, predictive mean matching (numeric data) logreg, logistic regression imputation (binary data, factor with 2 levels) polyreg, polytomous regression imputation for unordered categorical data (factor > 2 levels) polr, proportional odds model for (ordered, > 2 levels).
+
 
 
 ```{r}
@@ -402,16 +439,14 @@ summary(ckd_clean)
 summary(ckd_imputed)
 ```
 
-### Imputation by `logreg`
-
-
-
 
 ```{r}
 setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
 write_csv(ckd_imputed, "data/processed/dataset_mice_imputed.csv",
           progress = show_progress())
 ```
+
+
 ```{r}
 null_values <- colSums(is.na(ckd_imputed))
 print(null_values)
