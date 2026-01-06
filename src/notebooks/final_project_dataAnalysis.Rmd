@@ -374,6 +374,19 @@ ckd_imputed <- complete(imputed_data, 1)
 cat("\nMissing values after imputation:", sum(is.na(ckd_imputed)), "\n")
 ```
 
+```{r}
+summary(ckd_clean)
+```
+
+
+```{r}
+summary(ckd_imputed)
+```
+
+### Imputation by `logreg`
+
+
+
 
 ```{r}
 setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
