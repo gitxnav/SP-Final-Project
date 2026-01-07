@@ -1,7 +1,7 @@
 ---
 title: "Final Project - Data Analysis - Imputation Methods"
-author: "Marco Russo"
-date: "January 23, 2026"
+author: "..."
+date: sys.date()
 output:
   pdf_document: default
   html_document:
@@ -82,7 +82,7 @@ The dataset has been downloaded from [PubMed Central](https://pmc.ncbi.nlm.nih.g
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, 
-                      fig.width = 10, fig.height = 6)
+                      fig.width = 10, fig.height = 6, format="latex")
 ```
 
 ```{r}
@@ -172,7 +172,7 @@ https://archive.ics.uci.edu/ml/datasets/Chronic_Kidney_Disease
 
 # 3. Setup and Data Loading
 
-```{r setup, warning=FALSE, message=FALSE}
+```{r loading, warning=FALSE, message=FALSE}
 # Load required libraries
 if (!require("tidyverse")) install.packages("tidyverse")
 if (!require("corrplot")) install.packages("corrplot")
@@ -1385,7 +1385,7 @@ prop.table(table(na.omit(ckd_clean)$status))
 
 
 
-## 5. Imputation Comparison table
+ ## 5. Imputation Comparison table
 
 ```{r}
 # Load required libraries
@@ -1469,8 +1469,9 @@ comparison_table <- comparison_table %>%
 
 # Display first 20 rows of the comparison
 head(comparison_table, 20) %>%
-  kable("html", caption = "Imputation Comparison at Missing Positions") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+  kable("latex", caption = "Imputation Comparison at Missing Positions") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  landscape()
 ```
 
 
