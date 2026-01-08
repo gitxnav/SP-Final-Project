@@ -1,0 +1,46 @@
+name: Test on Develop
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        # Install test dependencies if you have a separate file
+        if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
+    
+    - name: Run tests
+      run: |
+        # Run your test command here
+        python -m pytest tests/ -v
+        # or if you use unittest
+        # python -m unittest discover
+    
+    - name: Upload test results (optional)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          test-results/
+          reports/
+        retention-days: 7
