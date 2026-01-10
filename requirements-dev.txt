@@ -22,7 +22,7 @@ python-dotenv==1.0.1
 # Testing dependencies
 pytest==8.3.4
 pytest-cov==6.0.0
-httpx==0.28.1
+httpx==0.28.1  # Required for FastAPI TestClient
 
 # Code quality
 pylint
