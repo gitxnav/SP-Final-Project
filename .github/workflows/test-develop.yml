@@ -31,7 +31,7 @@ jobs:
     - name: Run tests
       run: |
         # Run your test command here
-        python -m pytest tests/ -v
+        python -m pytest src/tests/ -v
         # or if you use unittest
         # python -m unittest discover
     
