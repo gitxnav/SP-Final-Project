@@ -1,65 +1,159 @@
 """
-Simple data loading module
+Data Loading Module for CKD Detection Project
+Handles raw data ingestion and initial validation
 """
+
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from sklearn.model_selection import train_test_split
+import logging
+from typing import Tuple
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 class DataLoader:
-    """Loads data from text files"""
+    """Handles loading and initial validation of CKD dataset"""
     
-    def __init__(self, data_dir="data"):
-        self.data_dir = Path(data_dir)
-        self.data_dir.mkdir(parents=True, exist_ok=True)
+    def __init__(self, data_path: str = '../../data/raw/chronic_kindey_disease.csv'):
+        """
+        Initialize DataLoader
+        
+        Args:
+            data_path: Path to raw CSV file
+        """
+        self.data_path = Path(data_path)
+        self.df = None
+        
+    def load_data(self) -> pd.DataFrame:
+        """
+        Load raw data with custom null identifiers
+        
+        Returns:
+            DataFrame with loaded data
+        """
+        try:
+            # '?' is defined as the null placeholder in the documentation
+            self.df = pd.read_csv(
+                self.data_path, 
+                na_values='?', 
+                skipinitialspace=True
+            )
+            logger.info(f"Data loaded successfully. Shape: {self.df.shape}")
+            return self.df
+        except FileNotFoundError:
+            logger.error(f"Error: File not found at {self.data_path}")
+            raise
+        except Exception as e:
+            logger.error(f"Error loading data: {str(e)}")
+            raise
     
-    def load_from_txt(self, filename, delimiter=","):
-        """Load data from text file"""
-        filepath = self.data_dir / filename
+    def validate_schema(self) -> bool:
+        """
+        Validate data schema and structure
         
-        if not filepath.exists():
-            return self._create_sample_data()
+        Returns:
+            True if schema is valid
+        """
+        if self.df is None:
+            logger.error("No data loaded. Call load_data() first.")
+            return False
         
-        return pd.read_csv(filepath, delimiter=delimiter)
+        # Expected dimensions
+        expected_rows = 400
+        expected_cols = 25
+        
+        if self.df.shape != (expected_rows, expected_cols):
+            logger.warning(
+                f"Unexpected dimensions: {self.df.shape} "
+                f"(expected: ({expected_rows}, {expected_cols}))"
+            )
+        
+        # Check for target column
+        if 'status' not in self.df.columns:
+            logger.error("Target column 'status' not found!")
+            return False
+        
+        logger.info("Schema validation passed")
+        return True
     
-    def _create_sample_data(self):
-        """Create sample data"""
-        np.random.seed(42)
-        n_samples = 100
+    def get_data_info(self) -> dict:
+        """
+        Get basic information about the dataset
         
-        data = {
-            'feature1': np.random.randn(n_samples),
-            'feature2': np.random.randn(n_samples),
-            'feature3': np.random.randn(n_samples),
-            'feature4': np.random.randn(n_samples),
-            'target': np.random.randint(0, 3, n_samples)
+        Returns:
+            Dictionary with dataset statistics
+        """
+        if self.df is None:
+            logger.error("No data loaded. Call load_data() first.")
+            return {}
+        
+        info = {
+            'shape': self.df.shape,
+            'n_rows': self.df.shape[0],
+            'n_cols': self.df.shape[1],
+            'numeric_cols': self.df.select_dtypes(include=[np.number]).columns.tolist(),
+            'categorical_cols': self.df.select_dtypes(include=['object']).columns.tolist(),
+            'target_distribution': self.df['status'].value_counts().to_dict() if 'status' in self.df.columns else {}
         }
         
-        return pd.DataFrame(data)
-    
-    def save_sample_data(self, filename="sample_data.txt"):
-        """Save sample data to file"""
-        df = self._create_sample_data()
-        filepath = self.data_dir / filename
-        df.to_csv(filepath, index=False)
-        return filepath
-    
-    def load_train_test_split(self, filename, test_size=0.2, random_state=42):
-        """Load data and split into train/test"""
-        df = self.load_from_txt(filename)
+        logger.info(f"Dataset contains {info['n_rows']} rows and {info['n_cols']} columns")
+        logger.info(f"Numeric features: {len(info['numeric_cols'])}")
+        logger.info(f"Categorical features: {len(info['categorical_cols'])}")
         
-        train_df, test_df = train_test_split(
-            df, 
-            test_size=test_size, 
-            random_state=random_state,
-            stratify=df['target'] if 'target' in df.columns else None
-        )
-        
-        return train_df, test_df
+        return info
     
-    def validate_data(self, df):
-        """Validate DataFrame"""
-        if df is None or df.empty:
-            raise ValueError("DataFrame is empty")
-        return True
+    def save_loaded_data(self, output_path: str = '../../data/processed/loaded_data.csv'):
+        """
+        Save loaded data to processed directory
+        
+        Args:
+            output_path: Path to save the loaded data
+        """
+        if self.df is None:
+            logger.error("No data to save. Call load_data() first.")
+            return
+        
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        self.df.to_csv(output_path, index=False)
+        logger.info(f"Data saved to {output_path}")
+
+
+def main():
+    """Main execution function"""
+    logger.info("Starting data loading process...")
+    
+    # Initialize loader
+    loader = DataLoader()
+    
+    # Load data
+    df = loader.load_data()
+    
+    # Validate schema
+    loader.validate_schema()
+    
+    # Get and display info
+    info = loader.get_data_info()
+    
+    # Display first few rows
+    print("\n=== First 5 rows ===")
+    print(df.head())
+    
+    print("\n=== Data Types ===")
+    print(df.dtypes)
+    
+    # Save loaded data
+    loader.save_loaded_data()
+    
+    logger.info("Data loading process completed successfully!")
+
+
+if __name__ == "__main__":
+    main()
