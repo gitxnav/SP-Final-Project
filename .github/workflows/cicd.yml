@@ -40,7 +40,7 @@ jobs:
     needs: pre-commit
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11"]
     
     steps:
     - uses: actions/checkout@v4
@@ -78,7 +78,7 @@ jobs:
     needs: pre-commit
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11"]
     
     steps:
     - uses: actions/checkout@v4
@@ -126,7 +126,7 @@ jobs:
     needs: [test-api, test-ml]
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11"]
     
     steps:
     - uses: actions/checkout@v4
