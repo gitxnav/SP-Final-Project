@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class DataLoader:
     """Handles loading and initial validation of CKD dataset"""
     
-    def __init__(self, data_path: str = '../../data/raw/chronic_kindey_disease.csv'):
+    def __init__(self, data_path: str = 'data/raw/chronic_kindey_disease.csv'):
         """
         Initialize DataLoader
         
@@ -108,7 +108,7 @@ class DataLoader:
         
         return info
     
-    def save_loaded_data(self, output_path: str = '../../data/processed/loaded_data.csv'):
+    def save_loaded_data(self, output_path: str = 'data/processed/loaded_data.csv'):
         """
         Save loaded data to processed directory
         
