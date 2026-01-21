@@ -11,10 +11,10 @@ import sys
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from data_loading import DataLoader
-from data_processing import DataProcessor
-from feature_engineering import FeatureEngineer
-from model_training import ModelTrainer
+from src.step01_data_loading import DataLoader
+from src.step02_data_processing import DataProcessor
+from src.step03_feature_engineering import FeatureEngineer
+from src.step04_model_training import ModelTrainer
 
 
 @pytest.fixture

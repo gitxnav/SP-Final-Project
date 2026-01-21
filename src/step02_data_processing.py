@@ -27,7 +27,7 @@ sns.set_context('notebook')
 class DataProcessor:
     """Handles data cleaning, analysis and visualization"""
     
-    def __init__(self, data_path: str = '../../data/processed/loaded_data.csv'):
+    def __init__(self, data_path: str = 'data/processed/ckd_normalized.csv'):
         """
         Initialize DataProcessor
         
@@ -36,8 +36,8 @@ class DataProcessor:
         """
         self.data_path = Path(data_path)
         self.df = None
-        self.reports_dir = Path('../../reports')
-        self.figures_dir = Path('../../figures')
+        self.reports_dir = Path('reports')
+        self.figures_dir = Path('figures')
         
         # Create output directories
         self.reports_dir.mkdir(parents=True, exist_ok=True)
@@ -276,7 +276,7 @@ class DataProcessor:
         corr_matrix.to_csv(corr_path)
         logger.info(f"Correlation matrix data saved to {corr_path}")
     
-    def save_cleaned_data(self, output_path: str = '../../data/processed/cleaned_data.csv'):
+    def save_cleaned_data(self, output_path: str = 'data/processed/cleaned_data.csv'):
         """
         Save cleaned data
         
