@@ -277,9 +277,6 @@ http-client.private.env.json
 
 # PyPI configuration file
 .pypirc
-<<<<<<< HEAD
-.Rproj.user
-=======
 
 # History files
 .Rhistory
@@ -331,4 +328,3 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
->>>>>>> 73c312b7fac153e2cf6dee1ace2dfb308ee4ba6b
