@@ -21,7 +21,14 @@ echo "📂 Current directory: $(pwd)"
 echo "🚀 Launching Streamlit application..."
 echo ""
 
+<<<<<<< HEAD
 streamlit run app.py --server.port 8502
 
 # Alternative: Run with custom port
 # streamlit run app.py --server.port 8502
+=======
+streamlit run src/app.py --server.port 8502
+
+# Alternative: Run with custom port
+# streamlit run src/app.py --server.port 8502
+>>>>>>> 73c312b7fac153e2cf6dee1ace2dfb308ee4ba6b

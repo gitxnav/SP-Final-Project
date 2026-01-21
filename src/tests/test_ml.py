@@ -11,10 +11,17 @@ import sys
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+<<<<<<< HEAD
 from data_loading import DataLoader
 from data_processing import DataProcessor
 from feature_engineering import FeatureEngineer
 from model_training import ModelTrainer
+=======
+from src.step01_data_loading import DataLoader
+from src.step02_data_processing import DataProcessor
+from src.step03_feature_engineering import FeatureEngineer
+from src.step04_model_training import ModelTrainer
+>>>>>>> 73c312b7fac153e2cf6dee1ace2dfb308ee4ba6b
 
 
 @pytest.fixture
@@ -315,4 +322,8 @@ def test_full_ml_pipeline():
     # Verify pipeline worked
     assert metrics['accuracy'] > 0, "Model should have non-zero accuracy"
     assert len(X_train) == 80, "Should have correct train size"
+<<<<<<< HEAD
     assert len(X_test) == 20, "Should have correct test size"
+=======
+    assert len(X_test) == 20, "Should have correct test size"
+>>>>>>> 73c312b7fac153e2cf6dee1ace2dfb308ee4ba6b
