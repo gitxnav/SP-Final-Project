@@ -1,0 +1,39 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    netcat-openbsd \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy backend code
+COPY src/backend/ /app/backend/
+COPY data/ /app/data/
+
+# Create directories
+RUN mkdir -p /app/mlruns /app/backend/models
+
+# Copy entrypoint script
+COPY docker/run_backend.sh /app/
+RUN chmod +x /app/run_backend.sh
+
+# Create non-root user
+RUN useradd -m -u 1001 appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
+EXPOSE 8000 5050
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+
+ENTRYPOINT ["./run_backend.sh"]

@@ -1,26 +1,100 @@
 version: '3.8'
 
 services:
-  backend:
-    build: .
-    container_name: ckd-backend
-    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+  mlflow:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.mlflow
+    container_name: ckd-mlflow
+    volumes:
+      - mlflow-data:/mlflow/mlruns
+      - model-artifacts:/mlflow/models
     ports:
-      - "8000:8000"
+      - "5050:5050"
+    networks:
+      - ckd-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5050/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: ckd-backend
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5050
+      - PYTHONPATH=/app
+      - PORT=${PORT:-8000}
+    volumes:
+      - ./src/backend:/app/backend
+      - ./data:/app/data
+      - mlflow-data:/app/mlruns
+      - model-artifacts:/app/backend/models
+    ports:
+      - "${PORT:-8000}:8000"
+    networks:
+      - ckd-network
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 40s
+    restart: unless-stopped
 
-  frontend:
-    build: .
-    container_name: ckd-frontend
+  frontend-internal:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: ckd-frontend-internal
     command: streamlit run frontend/app.py --server.port 8501 --server.address 0.0.0.0
+    environment:
+      - API_URL=http://backend:8000
+      - PYTHONPATH=/app
+    volumes:
+      - ./src/frontend:/app/frontend
     ports:
       - "8501:8501"
+    networks:
+      - ckd-network
     depends_on:
       backend:
         condition: service_healthy
-    environment:
-      - API_URL=http://backend:8000
+    restart: unless-stopped
+
+  # frontend-user:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile.frontend
+  #   container_name: ckd-frontend-user
+  #   command: streamlit run frontend/user/app.py --server.port 8502 --server.address 0.0.0.0
+  #   environment:
+  #     - API_URL=http://backend:8000
+  #     - PYTHONPATH=/app
+  #   volumes:
+  #     - ./src/frontend:/app/frontend
+  #   ports:
+  #     - "8502:8502"
+  #   networks:
+  #     - ckd-network
+  #   depends_on:
+  #     backend:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+
+networks:
+  ckd-network:
+    driver: bridge
+
+volumes:
+  mlflow-data:
+    driver: local
+  model-artifacts:
+    driver: local
