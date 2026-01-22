@@ -551,7 +551,6 @@ def analysis_section():
 def sidebar():
     """Sidebar configuration"""
     with st.sidebar:
-        st.image("https://img.icons8.com/fluency/96/000000/kidney.png", width=100)
         st.title("CKD Detection")
         st.markdown("---")
         

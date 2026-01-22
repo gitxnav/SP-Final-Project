@@ -1,0 +1,22 @@
+{
+    "total_features": 9,
+    "numeric_features": 9,
+    "categorical_features": 0,
+    "missing_values": "0",
+    "feature_list": [
+        "hemo",
+        "sg",
+        "sc",
+        "rbcc",
+        "pcv",
+        "htn",
+        "dm",
+        "bp",
+        "age"
+    ],
+    "data_shape": "(400, 10)",
+    "target_distribution": {
+        "1": 250,
+        "0": 150
+    }
+}

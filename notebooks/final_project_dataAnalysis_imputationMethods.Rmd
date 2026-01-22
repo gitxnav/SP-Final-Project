@@ -1,0 +1,1492 @@
+---
+title: "Final Project - Data Analysis - Imputation Methods"
+author: "..."
+date: sys.date()
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+email: ..
+header-includes:
+- \usepackage{xcolor}
+- \usepackage{framed}
+- \usepackage{listings}
+---
+
+# Objective
+
+Based on the information extracted from [nhs.uk/conditions/kidney-disease](https://www.nhs.uk/conditions/kidney-disease/) the **Chronic Kidney Disease** (CKD) is a long-term condition where damaged kidneys can't effectively filter waste and extra fluid from the blood. It leading to buildup and potential health problems like heart disease, anemia, and high blood pressure, with diabetes and hypertension being leading causes. Often showing few symptoms until advanced stages, requiring lifestyle changes, medications, or, in severe cases, dialysis or transplant to manage its progression.
+
+There are usually no **symptoms of CKD** in the early stages. It may only be diagnosed if you have a blood or urine test for another reason and the results show a possible problem with your kidneys. At a more advanced stage, symptoms can include:
+
+-   tiredness
+-   swollen ankles, feet or hands
+-   shortness of breath
+-   feeling sick
+-   blood in your pee (urine)
+
+The Chronic kidney disease is **usually caused by other conditions** that put a strain on the kidneys. Often it's the result of a combination of different problems. CKD can be caused by:
+
+-   high blood pressure – over time, this can put strain on the small blood vessels in the kidneys and stop the kidneys working properly
+-   diabetes – too much glucose in your blood can damage the tiny filters in the kidneys
+-   high cholesterol – this can cause a build-up of fatty deposits in the blood vessels supplying your kidneys, which can make it harder for them to work properly
+-   kidney infections
+-   glomerulonephritis – kidney inflammation
+-   autosomal dominant polycystic kidney disease – an inherited condition where growths called cysts develop in the kidneys
+-   blockages in the flow of urine – for example, from kidney stones that keep coming back, or an enlarged prostate
+-   long-term, regular use of certain medicines – such as lithium and non-steroidal anti-inflammatory drugs (NSAIDs)
+
+CKD **can be diagnosed** using blood and urine tests. These tests look for high levels of certain substances in the blood and urine that are signs your kidneys are not working properly.
+
+If the person at a high risk of developing kidney disease (for example, it has a known risk factor such as high blood pressure or diabetes), he may be advised to have regular tests to check for CKD so it's found at an early stage.
+
+The results of the blood and urine tests can be used to tell the stage of your kidney disease. This is a number that reflects how severe the damage to your kidneys is, with a higher number indicating more serious CKD.
+
+There's **no cure for CKD**, but treatment can help relieve the symptoms and stop it getting worse. The treatment will depend on how severe the condition is. The main treatments are:
+
+-   lifestyle changes to help you remain as healthy as possible
+-   medicine to control associated problems such as high blood pressure and high cholesterol
+-   medicine that can help the kidneys keep working for longer
+-   dialysis – treatment to replicate some of the kidney's functions (this may be necessary in advanced CKD)
+-   kidney transplant – this may also be necessary in advanced CKD
+
+CKD can range from a mild condition with no or few symptoms, to a very serious condition where the kidneys stop working, sometimes called kidney failure.
+
+Most people with CKD will be able to control their condition with medicine and regular check-ups. CKD only progresses to kidney failure in around 2 in 100 people with the condition.
+
+If someone has CKD, even if it's mild, he's at an increased risk of developing other serious problems, such as cardiovascular disease. This is a group of conditions affecting the heart and blood vessels, which includes heart attack and stroke.
+
+Cardiovascular disease is one of the main causes of death in people with kidney disease, although healthy lifestyle changes and medicine can help reduce your risk of developing it.
+
+***
+
+
+
+# 1. Some research questions
+
+1.  **How do blood markers (creatinine, urea, hemoglobin) correlate with kidney disease progression?**
+2.  **Which combination of features best predicts CKD status?**
+3.  **Are there distinct patient clusters based on their biochemical profiles?**
+4.  **How do demographic factors (age, hypertension, diabetes) interact with biochemical markers?**
+
+------------------------------------------------------------------------
+
+
+
+# 2. Dataset loading
+
+The dataset has been downloaded from [PubMed Central](https://pmc.ncbi.nlm.nih.gov/articles/PMC8757418/) and this study has been replicated to study improvements[^1].
+
+[^1]V. Kumar et al., “The Indian Chronic Kidney Disease (ICKD) study: baseline characteristics,” Clin Kidney J, vol. 15, no. 1, pp. 60–69, Jan. 2022, doi: 10.1093/CKJ/SFAB149.
+  
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, 
+                      fig.width = 10, fig.height = 6, format="latex")
+```
+
+```{r}
+library(readr)
+setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
+ckd_data <- read_csv("data/raw/chronic_kindey_disease.csv")
+```
+
+```{r}
+summary(ckd_data)
+```
+
+```{r}
+head(ckd_data)
+```
+
+**Attribute Information**
+
+## 2.1 Data Set Information:
+
+We use the following representation to collect the dataset:-
+
+* age - age
+* bp - blood pressure
+* sg - specific gravity
+* al - albumin
+* su - sugar
+* rbc - red blood cells
+* pc - pus cell
+* pcc - pus cell clumps
+* ba - bacteria
+* bgr - blood glucose random
+* bu - blood urea
+* sc - serum creatinine
+* sod - sodium
+* pot - potassium
+* hemo - hemoglobin
+* pcv - packed cell volume
+* wc - white blood cell count
+* rc - red blood cell count
+* htn - hypertension
+* dm - diabetes mellitus
+* cad - coronary artery disease
+* appet - appetite
+* pe - pedal edema
+* ane - anemia
+* class - class
+
+
+**Additional Feature Details**
+
+## 2.2 Attribute Information:
+
+We use 24 + class = 25 ( 11 numeric ,14 nominal)
+
+    Age(numerical) - age in years
+    Blood Pressure(numerical) - bp in mm/Hg
+    Specific Gravity(nominal) - sg - (1.005,1.010,1.015,1.020,1.025)
+    Albumin(nominal) - al - (0,1,2,3,4,5)
+    Sugar(nominal) - su - (0,1,2,3,4,5)
+    Red Blood Cells(nominal) - rbc - (normal,abnormal)
+    Pus Cell (nominal) - pc - (normal,abnormal)
+    Pus Cell clumps(nominal) - pcc - (present,notpresent)
+    Bacteria(nominal) - ba - (present,notpresent)
+    Blood Glucose Random(numerical) - bgr in mgs/dl
+    Blood Urea(numerical) -bu in mgs/dl
+    Serum Creatinine(numerical) - sc in mgs/dl
+    Sodium(numerical) - sod in mEq/L
+    Potassium(numerical) - pot in mEq/L
+    Hemoglobin(numerical) - hemo in gms
+    Packed Cell Volume(numerical)
+    White Blood Cell Count(numerical) - wc in cells/cumm
+    Red Blood Cell Count(numerical) - rc in millions/cmm
+    Hypertension(nominal) - htn - (yes,no)
+    Diabetes Mellitus(nominal) - dm - (yes,no)
+    Coronary Artery Disease(nominal) - cad - (yes,no)
+    Appetite(nominal) - appet - (good,poor)
+    Pedal Edema(nominal) - pe - (yes,no)
+    Anemia(nominal) - ane - (yes,no)
+    Class (nominal)- class - (ckd,notckd)
+
+**Acknowledgements**
+
+https://archive.ics.uci.edu/ml/datasets/Chronic_Kidney_Disease
+
+***
+
+# 3. Setup and Data Loading
+
+```{r loading, warning=FALSE, message=FALSE}
+# Load required libraries
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("corrplot")) install.packages("corrplot")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("gridExtra")) install.packages("gridExtra")
+if (!require("caret")) install.packages("caret")
+if (!require("mice")) install.packages("mice")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("tidyr")) install.packages("tidyr")
+if (!require("lattice")) install.packages("lattice")
+if (!require("GGally")) install.packages("GGally")
+if (!require("VIM")) install.packages("VIM")
+if (!require("psych")) install.packages("psych")
+if (!require("car")) install.packages("car")
+if (!require("factoextra")) install.packages("factoextra")
+if (!require("pROC")) install.packages("pROC")
+if (!require("ggpubr")) install.packages("ggpubr")
+if (!require("rstatix")) install.packages("rstatix")
+if (!require("missForest")) install.packages("missForest")
+
+library("missForest")
+library(tidyverse)
+library(corrplot)
+library(ggplot2)
+library(gridExtra)
+library(caret)
+library(mice)
+library(dplyr)
+library(tidyr)
+library(lattice)
+
+library(GGally)
+library(VIM)
+library(psych)
+library(lmtest)
+library(car)
+library(factoextra)
+library(pROC)
+library(ggpubr)
+library(rstatix)
+```
+
+
+
+
+```{r}
+# Set seed for reproducibility
+set.seed(17)
+
+# Read data
+setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
+ckd_data <- read.table("data/raw/chronic_kindey_disease.csv", 
+                       sep = ",", 
+                       header = TRUE, 
+                       na.strings = c("?", "NA", "", "NAN", "-"),
+                       stringsAsFactors = FALSE)
+
+# Set column names based on dataset description
+col_names <- c("age", "bp", "sg", "al", "su", "rbc", "pc", "pcc", "ba", "bgr",
+               "bu", "sc", "sod", "pot", "hemo", "pcv", "wbcc", "rbcc",
+               "htn", "dm", "cad", "appet", "pe", "ane", "status")
+
+names(ckd_data) <- col_names
+
+# Check structure
+str(ckd_data)
+
+```
+
+***
+
+# 4. Data cleaning
+
+
+```{r}
+ckd_data %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) 
+```
+
+```{r}
+library(naniar)
+library(ggplot2)
+# Visualize missing values by variable
+gg_miss_var(ckd_data, show_pct = TRUE) +
+  labs(title = "Missing Values by Variable in CKD Dataset Subset",
+       x = "Variables",
+       y = "Proportion of Missing Values")
+```
+
+```{r}
+library(VIM)
+
+aggr(ckd_data, numbers = TRUE, prop = FALSE, sortVar = TRUE)
+```
+
+
+```{r data_cleaning}
+# Display first few rows with original character format
+head(ckd_data)
+
+# Function to clean and convert numeric columns
+clean_numeric <- function(x) {
+  # Remove any non-numeric characters except decimal points and minus signs
+  x_clean <- gsub("[^0-9.-]", "", x)
+  # Convert to numeric
+  as.numeric(x_clean)
+}
+
+# Function to clean factor columns
+clean_factor <- function(x, levels = NULL) {
+  # Trim whitespace
+  x_clean <- trimws(x)
+  # Convert to factor
+  if(is.null(levels)) {
+    factor(x_clean)
+  } else {
+    factor(x_clean, levels = levels)
+  }
+}
+
+# Identify numeric and factor columns based on dataset description
+numeric_cols <- c("age", "bp", "bgr", "bu", "sc", "sod", "pot", 
+                  "hemo", "pcv", "wbcc", "rbcc", "sg", "al", "su")
+
+factor_cols <- c("sg", "al", "su", "rbc", "pc", "pcc", "ba", 
+                 "htn", "dm", "cad", "appet", "pe", "ane", "status")
+
+# Apply cleaning
+ckd_clean <- ckd_data
+
+# Clean numeric columns
+for(col in numeric_cols) {
+  ckd_clean[[col]] <- clean_numeric(ckd_clean[[col]])
+}
+
+# Clean factor columns with appropriate levels
+factor_levels <- list(
+  sg = c(1.005, 1.010, 1.015, 1.020, 1.025),
+  al = c(0.0, 1.0, 2.0, 3.0, 4.0, 5.0),
+  su = c(0.0, 1.0, 2.0, 3.0, 4.0, 5.0),
+  rbc = c("normal", "abnormal"),
+  pc = c("normal", "abnormal"),
+  pcc = c("present", "notpresent"),
+  ba = c("present", "notpresent"),
+  htn = c("yes", "no"),
+  dm = c("yes", "no"),
+  cad = c("yes", "no"),
+  appet = c("good", "poor"),
+  pe = c("yes", "no"),
+  ane = c("yes", "no"),
+  status = c("ckd", "notckd")
+)
+
+for(col in factor_cols) {
+  ckd_clean[[col]] <- clean_factor(ckd_clean[[col]], factor_levels[[col]])
+}
+
+# Check the cleaned data structure
+str(ckd_clean)
+
+# Summary statistics
+summary(ckd_clean)
+
+# Check missing values
+missing_summary <- sapply(ckd_clean, function(x) sum(is.na(x)))
+missing_df <- data.frame(
+  Column = names(missing_summary),
+  Missing_Count = missing_summary,
+  Missing_Percent = round(missing_summary/nrow(ckd_clean)*100, 2)
+) %>%
+  arrange(desc(Missing_Count))
+
+print("Missing Value Summary:")
+print(missing_df)
+```
+
+```{r}
+# Add binary outcome variable
+# ckd_clean$status_binary <- ifelse(ckd_clean$status == "ckd", 1, 0)
+
+# Check cleaned structure
+cat("\nCleaned Data Structure:\n")
+str(ckd_clean)
+
+# Summary statistics
+cat("\nSummary Statistics:\n")
+summary(ckd_clean)
+```
+## 4.1 DATA IMPUTATION
+
+### The MICE Algorithm
+
+Multiple Imputation by Chained Equations is a robust, informative method of dealing with missing data in datasets. The procedure ‘fills in’ (imputes) missing data in a dataset through an iterative series of predictive models. In each iteration, each specified variable in the dataset is imputed using the other variables in the dataset. These iterations should be run until it appears that convergence has been met.
+
+**Data Leakage**:
+
+MICE is particularly useful if missing values are associated with the target variable in a way that introduces leakage. For instance, let’s say you wanted to model customer retention at the time of sign up. A certain variable is collected at sign up or 1 month after sign up. The absence of that variable is a data leak, since it tells you that the customer did not retain for 1 month.
+
+**Funnel Analysis**:
+
+Information is often collected at different stages of a ‘funnel’. MICE can be used to make educated guesses about the characteristics of entities at different points in a funnel.
+
+**Confidence Intervals**:
+
+MICE can be used to impute missing values, however it is important to keep in mind that these imputed values are a prediction. Creating multiple datasets with different imputed values allows you to do two types of inference:
+
+* Imputed Value Distribution: A profile can be built for each imputed value, allowing you to make statements about the likely distribution of that value.
+
+* Model Prediction Distribution: With multiple datasets, you can build multiple models and create a distribution of predictions for each sample. Those samples with imputed values which were not able to be imputed with much confidence would have a larger variance in their predictions.
+
+```{r missing_analysis}
+## Missing Data Analysis and Imputation
+
+
+# Calculate missingness
+missing_summary <- data.frame(
+  Variable = names(ckd_clean),
+  Missing_Count = colSums(is.na(ckd_clean)),
+  Missing_Percent = round(colSums(is.na(ckd_clean))/nrow(ckd_clean)*100, 2)
+) %>%
+  arrange(desc(Missing_Percent))
+
+print("Missing Data Summary:")
+print(missing_summary)
+
+# Visualize missing data pattern
+missing_plot <-  aggr(ckd_clean, 
+                     col = c('navyblue', 'red'), 
+                     numbers = TRUE, 
+                     sortVars = TRUE,
+                     labels = names(ckd_clean), 
+                     cex.axis = .7,
+                     gap = 3, 
+                     ylab = c("Missing data pattern", "Pattern"))
+```
+> defaultMethod = c("pmm", "logreg", "polyreg", "polr")
+A vector of length 4 containing the default imputation methods for 1) numeric data, 2) factor data with 2 levels, 3) factor data with > 2 unordered levels, and 4) factor data with > 2 ordered levels. By default, the method uses pmm, predictive mean matching (numeric data) logreg, logistic regression imputation (binary data, factor with 2 levels) polyreg, polytomous regression imputation for unordered categorical data (factor > 2 levels) polr, proportional odds model for (ordered, > 2 levels).
+
+
+
+```{r}
+# Multiple imputation using MICE
+cat("\nPerforming Multiple Imputation...\n")
+imputed_data <- mice(ckd_clean, 
+                     m = 5, 
+                     maxit = 50, 
+                     method = 'pmm', 
+                     seed = 42)
+
+# Extract first imputed dataset
+ckd_mice_imputed <- complete(imputed_data, 1)
+
+# Check imputation quality
+cat("\nMissing values after imputation:", sum(is.na(ckd_mice_imputed)), "\n")
+```
+
+```{r}
+summary(ckd_clean)
+```
+
+
+```{r}
+summary(ckd_mice_imputed)
+```
+
+
+```{r}
+setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
+write_csv(ckd_mice_imputed, "data/processed/dataset_mice_imputed.csv",
+          progress = show_progress())
+```
+
+
+```{r}
+null_values <- colSums(is.na(ckd_mice_imputed))
+print(null_values)
+```
+
+
+### Simple Imputation
+Idea. Fill missing values with a single plausible value (one pass). Fast and convenient, but it underestimates uncertainty (standard errors too small) and can distort distributions.
+
+Typical choices
+
+* Mean/Median/Mode (baselines; median is more robust to skew)
+* k-Nearest Neighbors (kNN) (borrows information from similar rows)
+* Hot-deck (donor-based; similar spirit to kNN)
+
+#### VIM:KNN
+
+Detecting missing values mechanisms is usually done by statistical tests or models. Visualization of missing and imputed values can support the test decision, but also reveals more details about the data structure. Most notably, statistical requirements for a test can be checked graphically, and problems like outliers or skewed data distributions can be discovered. Furthermore, the included plot methods may also be able to detect missing values mechanisms in the first place.
+
+k-Nearest Neighbour Imputation based on a variation of the [Gower Distance](https://en.wikipedia.org/wiki/Gower%27s_distance) for numerical, categorical, ordered and semi-continous variables.
+
+**EXAMPLE**
+
+```{r}
+# kNN imputation with VIM::kNN (works on data frames; chooses donors by similarity)
+# library(VIM)
+# 
+# # We impute only BMI here; set k=5 as a reasonable starting point.
+# ckd_knn <- ckd_clean |>
+#   select(age, bp, ) |>
+#   VIM::kNN(k = 5, imp_var = FALSE
+#            ,trace = TRUE, )  # imp_var=FALSE avoids extra *_imp columns
+# 
+# # Check imputation effect
+# sum(is.na(ckd_knn$BMI))   # original missing BMI
+```
+
+
+
+```{r}
+null_values <- colSums(is.na(ckd_clean))
+print(null_values)
+```
+
+```{r}
+numeric_vars <- c("age", "bp", "bgr", "bu", "sc", "sod", "pot", 
+                  "hemo", "pcv", "wbcc", "rbcc")
+
+categorical_vars <- c("sg", "al", "su", "rbc", "pc", "pcc", "ba", 
+                      "htn", "dm", "cad", "appet", "pe", "ane", "status")
+
+binary_vars <- c("htn", "dm", "cad", "appet", "pe", "ane")
+```
+
+
+#### Basic kNN imputation using all variables
+
+
+
+```{r basic_knn_imputation}
+# Basic kNN imputation using all variables
+cat("Starting basic kNN imputation (k=5)...\n")
+start_time <- Sys.time()
+
+ckd_knn_basic <- VIM::kNN(
+  data = ckd_clean,  # Remove derived variable
+  k = 5,
+  imp_var = FALSE,  # Don't create imputation indicator variables
+  trace = TRUE,     # Show progress
+  useImputedDist = TRUE  # Use imputed values for distance calculation
+)
+
+end_time <- Sys.time()
+cat(sprintf("Basic kNN imputation completed in %.2f seconds\n", 
+            end_time - start_time))
+
+# Check missing values after imputation
+missing_after <- colSums(is.na(ckd_knn_basic))
+cat("\nMissing values after basic kNN imputation:\n")
+print(missing_after[missing_after > 0])
+
+if(sum(missing_after) > 0) {
+  cat("Warning: Not all missing values were imputed\n")
+  cat("This is likely due to:")
+  cat("1. Too many missing values in some observations\n")
+  cat("2. Insufficient complete cases for some variables\n")
+  cat("3. Need to increase k value\n")
+}
+```
+
+
+```{r}
+null_values <- colSums(is.na(ckd_knn_basic))
+print(null_values)
+```
+
+```{r}
+summary(ckd_knn_basic)
+```
+
+#### Multi-stage imputation
+
+
+```{r multistage_knn}
+# For datasets with high missingness, use multi-stage imputation
+cat("\n=== MULTI-STAGE kNN IMPUTATION ===\n")
+
+# Stage 1: Impute variables with low missingness first
+ckd_stage1 <- ckd_clean
+
+# Identify variables by missingness level
+missing_levels <- data.frame(
+  Variable = names(ckd_stage1),
+  Missing_Pct = colMeans(is.na(ckd_stage1)) * 100
+) %>%
+  mutate(
+    Level = case_when(
+      Missing_Pct < 10 ~ "Low",
+      Missing_Pct >= 10 & Missing_Pct < 30 ~ "Medium",
+      Missing_Pct >= 30 ~ "High"
+    )
+  )
+
+print("Missingness Levels:")
+print(table(missing_levels$Level))
+
+# Stage 1: Impute low missingness variables
+low_missing_vars <- missing_levels$Variable[missing_levels$Level == "Low"]
+cat("\nStage 1: Imputing low missingness variables (k=10)...\n")
+
+if(length(low_missing_vars) > 0) {
+  ckd_stage1 <- VIM::kNN(
+    data = ckd_stage1,
+    variable = low_missing_vars,
+    k = 10,
+    imp_var = FALSE,
+    trace = FALSE,
+    useImputedDist = TRUE
+  )
+}
+
+# Stage 2: Impute medium missingness variables using imputed variables
+medium_missing_vars <- missing_levels$Variable[missing_levels$Level == "Medium"]
+cat("Stage 2: Imputing medium missingness variables (k=15)...\n")
+
+if(length(medium_missing_vars) > 0) {
+  ckd_stage1 <- VIM::kNN(
+    data = ckd_stage1,
+    variable = medium_missing_vars,
+    k = 15,
+    imp_var = FALSE,
+    trace = FALSE,
+    useImputedDist = TRUE
+  )
+}
+
+# Stage 3: Impute high missingness variables last
+high_missing_vars <- missing_levels$Variable[missing_levels$Level == "High"]
+cat("Stage 3: Imputing high missingness variables (k=20)...\n")
+
+if(length(high_missing_vars) > 0) {
+  ckd_multistage <- VIM::kNN(
+    data = ckd_stage1,
+    variable = high_missing_vars,
+    k = 20,
+    imp_var = FALSE,
+    trace = FALSE,
+    useImputedDist = TRUE
+  )
+} else {
+  ckd_multistage <- ckd_stage1
+}
+
+# Check results
+cat("\nMissing values after multi-stage kNN imputation:\n")
+print(colSums(is.na(ckd_multistage)))
+```
+
+#### More sophisticated kNN imputation
+
+
+```{r advanced_knn_imputation}
+# More sophisticated kNN imputation
+cat("\n=== ADVANCED kNN IMPUTATION ===\n")
+
+# Calculate optimal k (rule of thumb: sqrt(n))
+optimal_k <- round(sqrt(nrow(ckd_clean)))
+cat(sprintf("Optimal k (sqrt(n)): %d\n", optimal_k))
+
+# Create a copy for imputation
+ckd_for_imputation <- ckd_clean
+
+# Step 1: Identify variables with too many missing values
+missing_pct <- colMeans(is.na(ckd_for_imputation)) * 100
+high_missing_vars <- names(missing_pct[missing_pct > 30])
+
+cat("Variables with >30% missing:", paste(high_missing_vars, collapse = ", "), "\n")
+
+# Step 2: Create distance matrix using only complete-ish variables
+# Select variables with <20% missing for distance calculation
+good_distance_vars <- names(missing_pct[missing_pct < 20])
+
+cat("Using these variables for distance calculation:", 
+    paste(good_distance_vars, collapse = ", "), "\n")
+
+# Step 3: Perform kNN imputation with custom parameters
+cat("\nPerforming advanced kNN imputation...\n")
+start_time <- Sys.time()
+
+ckd_knn_advanced <- VIM::kNN(
+  data = ckd_for_imputation,
+  variable = colnames(ckd_for_imputation),  # Impute all variables
+  dist_var = good_distance_vars,            # Use only good variables for distance
+  k = optimal_k,                            # Optimal k
+  numFun = median,                          # Use median for numeric (robust)
+  catFun = function(x) {                    # Custom mode function
+    tab <- table(x)
+    names(tab)[which.max(tab)]
+  },
+  imp_var = FALSE,                           # Keep imputation indicators
+  trace = TRUE,
+  useImputedDist = TRUE
+)
+
+end_time <- Sys.time()
+cat(sprintf("Advanced kNN imputation completed in %.2f seconds\n", 
+            end_time - start_time))
+
+# Extract just the imputed data (without indicator columns)
+imputed_cols <- !grepl("_imp$", colnames(ckd_knn_advanced))
+ckd_imputed <- ckd_knn_advanced[, imputed_cols]
+
+# Add back status feature
+ckd_imputed$status <- ckd_clean$status
+
+# Check results
+cat("\nMissing values after advanced kNN imputation:\n")
+print(colSums(is.na(ckd_imputed)))
+
+# Create imputation summary
+imp_indicators <- ckd_knn_advanced[, grepl("_imp$", colnames(ckd_knn_advanced))]
+imp_summary <- data.frame(
+  Variable = gsub("_imp", "", colnames(imp_indicators)),
+  Imputed_Count = colSums(imp_indicators),
+  Imputed_Percent = round(colSums(imp_indicators)/nrow(ckd_imputed)*100, 2)
+) %>%
+  arrange(desc(Imputed_Percent))
+
+print("Imputation Summary:")
+print(imp_summary)
+```
+
+#### Comparison different k values
+
+
+```{r k_value_comparison}
+# Compare different k values
+cat("\n=== COMPARING DIFFERENT k VALUES ===\n")
+
+k_values <- c(3, 5, 10, 15, 20, 25)
+imputation_results <- list()
+
+for(k_val in k_values) {
+  cat(sprintf("\nTesting k = %d...\n", k_val))
+  
+  # Impute with current k
+  ckd_temp <- VIM::kNN(
+    data = ckd_for_imputation,
+    k = k_val,
+    imp_var = FALSE,
+    trace = TRUE,
+    useImputedDist = TRUE
+  )
+  
+  # Store results
+  imputation_results[[as.character(k_val)]] <- list(
+    k = k_val,
+    missing_after = sum(is.na(ckd_temp)),
+    variables_imputed = sum(colSums(is.na(ckd_temp)) == 0)
+  )
+}
+
+# Create comparison table
+comparison_table <- do.call(rbind, lapply(imputation_results, as.data.frame))
+print("kNN Imputation Performance by k Value:")
+print(comparison_table)
+
+# Visualize comparison
+ggplot(comparison_table, aes(x = k, y = missing_after)) +
+  geom_line(color = "blue", size = 1) +
+  geom_point(color = "red", size = 3) +
+  labs(title = "Total Missing Values by k",
+       x = "k (Number of Neighbors)",
+       y = "Total Missing Values Remaining") +
+  theme_minimal()
+
+ggplot(comparison_table, aes(x = k, y = variables_imputed)) +
+  geom_line(color = "green", size = 1) +
+  geom_point(color = "darkgreen", size = 3) +
+  labs(title = "Complete Variables by k",
+       x = "k (Number of Neighbors)",
+       y = "Number of Variables with No Missing Values") +
+  theme_minimal()
+```
+
+#### Distance Metric Analysis
+
+```{r distance_analysis}
+# Analyze distance metrics for mixed data
+cat("\n=== DISTANCE METRIC ANALYSIS ===\n")
+
+# Gower's distance calculation
+calculate_gower <- function(data) {
+  # Convert all to numeric for distance calculation
+  # In practice, VIM uses specialized distance for mixed data
+  
+  # For demonstration, let's calculate on a subset
+  # subset_data <- data %>%
+  #   select(age, bp, sc, hemo, htn, dm) %>%
+  #   mutate(
+  #     htn_num = as.numeric(factor(htn)),
+  #     dm_num = as.numeric(factor(dm))
+  #   ) %>%
+  #   select(-htn, -dm)
+  
+  subset_data <- data
+  
+  # Handle missing values by imputing with mean for this analysis
+  subset_data_imputed <- subset_data
+  for(col in names(subset_data)) {
+    subset_data_imputed[[col]][is.na(subset_data[[col]])] <- 
+      mean(subset_data[[col]], na.rm = TRUE)
+  }
+  
+  # Calculate Euclidean distance (simplified)
+  dist_matrix <- dist(subset_data_imputed, method = "euclidean")
+  
+  return(dist_matrix)
+}
+
+# Calculate distances on original data
+cat("Calculating distance matrix on key variables...\n")
+distance_matrix <- calculate_gower(ckd_for_imputation)
+
+# Analyze distance distribution
+distance_values <- as.vector(as.matrix(distance_matrix))
+distance_summary <- summary(distance_values)
+
+cat("Distance Distribution Summary:\n")
+print(distance_summary)
+
+# Visualize distance distribution
+hist(distance_values, 
+     main = "Distribution of Distances Between Observations",
+     xlab = "Distance",
+     ylab = "Frequency",
+     col = "lightblue",
+     breaks = 30)
+```
+#### Validation of kNN Imputation
+
+```{r validation}
+# Validate kNN imputation by creating artificial missing values
+cat("\n=== VALIDATION OF kNN IMPUTATION ===\n")
+
+# Create a validation dataset with known values
+set.seed(42)
+
+# Select 10% of values to make missing (MAR - Missing at Random)
+n_to_missing <- round(nrow(ckd_for_imputation) * ncol(ckd_for_imputation) * 0.10)
+missing_indices <- sample(1:(nrow(ckd_for_imputation) * ncol(ckd_for_imputation)), 
+                          n_to_missing)
+
+# Store original values
+original_values <- matrix(NA, nrow = nrow(ckd_for_imputation), 
+                          ncol = ncol(ckd_for_imputation))
+for(idx in missing_indices) {
+  row_idx <- ((idx - 1) %% nrow(ckd_for_imputation)) + 1
+  col_idx <- floor((idx - 1) / nrow(ckd_for_imputation)) + 1
+  original_values[row_idx, col_idx] <- ckd_for_imputation[row_idx, col_idx]
+  ckd_for_imputation[row_idx, col_idx] <- NA
+}
+
+# Perform kNN imputation on validation data
+cat("Imputing validation dataset...\n")
+validation_imputed <- VIM::kNN(
+  data = ckd_for_imputation,
+  k = 10,
+  imp_var = FALSE,
+  trace = FALSE,
+  useImputedDist = TRUE
+)
+
+# Calculate imputation accuracy
+imputation_accuracy <- data.frame()
+for(col in 1:ncol(ckd_for_imputation)) {
+  col_name <- colnames(ckd_for_imputation)[col]
+  original_col <- original_values[, col]
+  imputed_col <- validation_imputed[[col_name]]
+  
+  # Find indices where we artificially created missing values
+  missing_in_col <- which(!is.na(original_values[, col]))
+  
+  if(length(missing_in_col) > 0 && is.numeric(original_col)) {
+    # For numeric variables: RMSE
+    rmse <- sqrt(mean((original_col[missing_in_col] - 
+                        imputed_col[missing_in_col])^2, na.rm = TRUE))
+    
+    imputation_accuracy <- rbind(imputation_accuracy, 
+                                 data.frame(Variable = col_name,
+                                            Type = "Numeric",
+                                            RMSE = rmse))
+  } else if(length(missing_in_col) > 0 && is.factor(original_col)) {
+    # For categorical variables: Accuracy
+    accuracy <- mean(original_col[missing_in_col] == 
+                      imputed_col[missing_in_col], na.rm = TRUE)
+    
+    imputation_accuracy <- rbind(imputation_accuracy,
+                                 data.frame(Variable = col_name,
+                                            Type = "Categorical",
+                                            RMSE = 1 - accuracy))
+  }
+}
+
+print("Imputation Accuracy (Lower RMSE is better):")
+print(imputation_accuracy %>% arrange(RMSE))
+
+# Overall accuracy
+overall_accuracy <- mean(imputation_accuracy$RMSE)
+cat(sprintf("\nOverall Imputation Error (RMSE): %.4f\n", overall_accuracy))
+```
+
+#### Distribution Preservation Analysis
+
+```{r distribution_analysis}
+# Compare distributions before and after imputation
+cat("\n=== DISTRIBUTION PRESERVATION ANALYSIS ===\n")
+
+# Select key variables for distribution comparison
+key_vars <- c("age", "bp", "sc", "hemo", "htn", "dm")
+
+# Create comparison plots
+plot_list <- list()
+
+for(var in key_vars) {
+  if(is.numeric(ckd_for_imputation[[var]])) {
+    # For numeric variables: density plot
+    df_compare <- data.frame(
+      Value = c(ckd_for_imputation[[var]], ckd_imputed[[var]]),
+      Dataset = rep(c("Original (with NA)", "kNN Imputed"), 
+                    each = nrow(ckd_for_imputation))
+    )
+    
+    p <- ggplot(df_compare, aes(x = Value, fill = Dataset)) +
+      geom_density(alpha = 0.5) +
+      labs(title = paste("Distribution:", var),
+           x = var,
+           y = "Density") +
+      theme_minimal() +
+      theme(legend.position = "bottom")
+    
+  } else {
+    # For categorical variables: bar plot
+    orig_counts <- table(ckd_for_imputation[[var]], useNA = "always")
+    imp_counts <- table(ckd_imputed[[var]])
+    
+    df_compare <- data.frame(
+      Category = c(names(orig_counts), names(imp_counts)),
+      Count = c(as.numeric(orig_counts), as.numeric(imp_counts)),
+      Dataset = rep(c("Original", "Imputed"), 
+                    c(length(orig_counts), length(imp_counts)))
+    )
+    
+    p <- ggplot(df_compare, aes(x = Category, y = Count, fill = Dataset)) +
+      geom_bar(stat = "identity", position = "dodge") +
+      labs(title = paste("Distribution:", var),
+           x = var,
+           y = "Count") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "bottom")
+  }
+  
+  plot_list[[var]] <- p
+}
+
+# Arrange plots
+grid.arrange(grobs = plot_list, ncol = 2, 
+             top = "Distribution Comparison: Original vs kNN Imputed")
+
+# Statistical comparison of distributions
+cat("\nStatistical Comparison of Distributions (Kolmogorov-Smirnov Test):\n")
+for(var in key_vars) {
+  if(is.numeric(ckd_for_imputation[[var]]) && 
+     is.numeric(ckd_imputed[[var]])) {
+    
+    # Remove NAs for KS test
+    orig_clean <- na.omit(ckd_for_imputation[[var]])
+    imp_clean <- ckd_imputed[[var]]
+    
+    if(length(orig_clean) > 0 && length(imp_clean) > 0) {
+      ks_test <- ks.test(orig_clean, imp_clean)
+      cat(sprintf("%s: D = %.3f, p = %.4f\n", 
+                  var, ks_test$statistic, ks_test$p.value))
+    }
+  }
+}
+```
+
+#### Comparison with MICE Imputation
+
+```{r mice_comparison}
+cat("\n=== COMPARISON: kNN vs MICE IMPUTATION ===\n")
+
+library(dplyr)
+library(ggplot2)
+
+# Compare missing values
+cat("\nMissing Values Comparison:\n")
+comparison <- data.frame(
+  Variable = names(ckd_for_imputation %>% select(-status)),
+  Original_NA = colSums(is.na(ckd_clean %>% select(-status))),
+  kNN_NA = colSums(is.na(ckd_imputed %>% select(-status))),
+  MICE_NA = colSums(is.na(ckd_mice_imputed %>% select(-status)))
+)
+  
+  print(comparison %>% filter(Original_NA > 0))
+  
+  # Compare distributions for key variables
+  cat("\nDistribution Comparison (Key Variables):\n")
+  for(var in c("age", "sc", "hemo")) {
+    if(is.numeric(ckd_for_imputation[[var]])) {
+      # Calculate means
+      orig_mean <- mean(ckd_clean[[var]], na.rm = TRUE)
+      knn_mean <- mean(ckd_imputed[[var]], na.rm = TRUE)
+      mice_mean <- mean(ckd_mice_imputed[[var]], na.rm = TRUE)
+      
+      cat(sprintf("\n%s:\n", var))
+      cat(sprintf("  Original (with NA): mean = %.2f\n", orig_mean))
+      cat(sprintf("  kNN imputed:        mean = %.2f (diff: %.2f)\n", 
+                  knn_mean, knn_mean - orig_mean))
+      cat(sprintf("  MICE imputed:       mean = %.2f (diff: %.2f)\n", 
+                  mice_mean, mice_mean - orig_mean))
+    }
+  }
+  
+# Create comparison plot
+comparison_plot_data <- data.frame(
+  Method = rep(c("kNN", "MICE"), each = nrow(ckd_imputed)),
+  Age = c(ckd_imputed$age, ckd_mice_imputed$age),
+  Creatinine = c(ckd_imputed$sc, ckd_mice_imputed$sc),
+  Hemoglobin = c(ckd_imputed$hemo, ckd_mice_imputed$hemo)
+)
+
+p1 <- ggplot(comparison_plot_data, aes(x = Age, fill = Method)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Age Distribution: kNN vs MICE") +
+  theme_minimal()
+
+p2 <- ggplot(comparison_plot_data, aes(x = Creatinine, fill = Method)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Creatinine Distribution: kNN vs MICE") +
+  theme_minimal()
+
+p3 <- ggplot(comparison_plot_data, aes(x = Hemoglobin, fill = Method)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Hemoglobin Distribution: kNN vs MICE") +
+  theme_minimal()
+
+grid.arrange(p1, p2, p3, ncol = 1, 
+             top = "kNN vs MICE Imputation Comparison")
+
+```
+
+
+
+#### Multiple imputation with MissForest
+
+`missForest` is a nonparametric imputation method for basically any kind of tabular data. It handles mixed types (numeric + categorical), nonlinear relations, interactions, and even high dimensionality ((p n)). For each variable with missingness, it fits a random forest on the observed part and predicts the missing part, iterating until a stopping rule is met (or maxiter says “enough”).
+
+By default, missForest() now uses the ranger backend for speed and multithreading.
+For legacy/compatibility, you can select the classic randomForest backend via backend = "randomForest".
+The out-of-bag (OOB) error from the backend is transformed into an imputation error estimate — one for numeric variables (NRMSE) and one for factors (PFC). 
+
+
+
+```{r}
+library(dplyr)
+library(missForest)
+
+# Start from the existing subset:
+# nhanes_sub <- NHANES |> select(ID, Age, Gender, BMI, BPSysAve, Diabetes)
+
+# 1) Keep only model-relevant columns (drop pure identifier)
+# 2) Convert character variables to factors (missForest expects factors, not raw character)
+# 3) Coerce to base data.frame to avoid tibble-related method dispatch issues
+
+library(dplyr)
+library(missForest)
+
+# Prepare the data for missForest
+# Select relevant predictor variables and the target 'status'
+# Convert character/factor variables appropriately (missForest handles factors)
+
+set.seed(17) # For reproducibility
+mf_fit <- missForest(
+  ckd_for_imputation,
+  ntree   = 50,    # Number of trees in the random forest
+  maxiter = 5,      # Outer iterations
+  verbose = TRUE    # Set to TRUE to see progress
+)
+
+# Extract the imputed data and error metrics
+ckd_missForest_imputed <- mf_fit$ximp
+mf_oob_error <- mf_fit$OOBerror
+
+# Check the Out-of-Bag (OOB) imputation error
+print(paste("Normalized Root Mean Squared Error (NRMSE) for numeric variables:", mf_fit[["OOBerror"]][["NRMSE"]]))
+print(paste("Proportion of Falsely Classified entries (PFC) for categorical variables:", mf_fit[["OOBerror"]][["PFC"]]))
+
+# Verify no missing values remain
+sum(is.na(ckd_missForest_imputed))
+```
+
+```{r}
+library(ggplot2)
+library(patchwork)
+
+# Function to plot distributions by class for a key variable
+plot_dist_comparison <- function(orig_data,
+                                 knn_data,
+                                 mf_data,
+                                 var_name, 
+                                 method_names = c("Original (with NAs)", "kNN Imputed", "missForest Imputed")) {
+  
+  # Combine data for plotting
+  plot_data <- rbind(
+    data.frame(Value = orig_data[[var_name]], Status = orig_data$status, Method = method_names[1]),
+    data.frame(Value = knn_data[[var_name]], Status = knn_data$status, Method = method_names[2]),
+    data.frame(Value = mf_data[[var_name]], Status = mf_data$status, Method = method_names[3])
+  )
+  
+  
+  
+  # Create density plot for numeric variables
+  p <- ggplot(plot_data, aes(x = Value, fill = Status)) +
+    geom_density(alpha = 0.6) +
+    facet_wrap(~ Method, ncol = 1) +
+    labs(title = paste("Distribution of", var_name, "by CKD Status"),
+         x = var_name,
+         y = "Density") +
+    theme_minimal() +
+    theme(legend.position = "bottom")
+  
+  return(p)
+}
+
+# Example: Compare distributions for Serum Creatinine (sc)
+# You will need your kNN-imputed dataset (ckd_knn_imputed) and missForest dataset
+p_sc <- plot_dist_comparison(ckd_clean, ckd_knn_basic, ckd_missForest_imputed, "sc")
+print(p_sc)
+```
+
+### Correlation betweeen features
+
+```{r}
+kidney_data <- ckd_clean
+
+categorical_vars <- c("rbc", "pc", "pcc", "ba", "htn", "dm", "cad", "appet", "pe", "ane", "status")
+kidney_data[categorical_vars] <- lapply(kidney_data[categorical_vars], as.factor)
+
+# Convert ordinal/numeric-looking categorical variables to numeric
+kidney_data$sg <- as.numeric(as.character(kidney_data$sg))
+kidney_data$al <- as.numeric(as.character(kidney_data$al))
+kidney_data$su <- as.numeric(as.character(kidney_data$su))
+
+# Create binary target variable (1 for ckd, 0 for notckd)
+kidney_data$target <- ifelse(kidney_data$status == "ckd", 1, 0)
+
+# Remove original status column if needed
+kidney_data$status <- NULL
+```
+
+
+```{r}
+# Select only numeric columns for correlation analysis
+numeric_vars <- sapply(kidney_data, is.numeric)
+numeric_data <- kidney_data[, numeric_vars]
+
+# Calculate correlation matrix with target
+cor_matrix <- cor(numeric_data, use = "complete.obs")
+target_cor <- cor_matrix[,"target"]
+
+# Sort correlations by absolute value
+sorted_cor <- sort(abs(target_cor[names(target_cor) != "target"]), decreasing = TRUE)
+
+# Print top correlated features
+cat("Top features correlated with CKD:\n")
+print(sorted_cor)
+
+# Visualize correlations
+library(corrplot)
+corrplot(cor_matrix, method = "color", type = "upper", 
+         tl.cex = 0.7, number.cex = 0.7)
+
+# Select features above threshold (e.g., |cor| > 0.3)
+threshold <- 0.3
+important_numeric <- names(sorted_cor[abs(sorted_cor) > threshold])
+cat("\nImportant numeric features (|cor| >", threshold, "):\n")
+print(important_numeric)
+```
+
+```{r}
+# Function to calculate chi-square statistic between categorical variables
+chi_square_test <- function(data, categorical_vars, target_var = "target") {
+  results <- data.frame()
+  
+  for(var in categorical_vars) {
+    if(var != target_var) {
+      # Create contingency table
+      contingency_table <- table(data[[var]], data[[target_var]])
+      
+      # Perform chi-square test
+      chi_test <- chisq.test(contingency_table)
+      
+      # Calculate Cramér's V (effect size)
+      n <- sum(contingency_table)
+      k <- min(dim(contingency_table))
+      cramers_v <- sqrt(chi_test$statistic / (n * (k - 1)))
+      
+      results <- rbind(results, data.frame(
+        Feature = var,
+        Chi_Square = chi_test$statistic,
+        p_value = chi_test$p.value,
+        Cramers_V = cramers_v
+      ))
+    }
+  }
+  
+  return(results[order(-results$Cramers_V), ])
+}
+
+# Test categorical variables (excluding target)
+cat_vars <- categorical_vars[categorical_vars != "status"]
+chi_results <- chi_square_test(kidney_data, cat_vars)
+
+# Print results
+print(chi_results)
+
+# Select significant features (p < 0.05 and Cramér's V > 0.1)
+significant_cat <- chi_results$Feature[chi_results$p_value < 0.05 & 
+                                       chi_results$Cramers_V > 0.1]
+cat("\nSignificant categorical features:\n")
+print(significant_cat)
+```
+
+```{r}
+library(caret)
+
+feature_selection_pipeline <- function(data, target_name = "target") {
+  
+  # Separate numeric and categorical features
+  numeric_features <- names(data)[sapply(data, is.numeric)]
+  numeric_features <- numeric_features[numeric_features != target_name]
+  
+  categorical_features <- names(data)[sapply(data, is.factor)]
+  categorical_features <- categorical_features[categorical_features != target_name]
+  
+  # 1. Numeric features: Correlation with target
+  cor_values <- sapply(numeric_features, function(x) {
+    cor(data[[x]], data[[target_name]], use = "complete.obs")
+  })
+  
+  # Select numeric features with |cor| > 0.25
+  selected_numeric <- names(cor_values)[abs(cor_values) > 0.25]
+  
+  # 2. Categorical features: Chi-square test
+  chi_results <- data.frame()
+  for(cat_var in categorical_features) {
+    tbl <- table(data[[cat_var]], data[[target_name]])
+    chi_test <- chisq.test(tbl)
+    n <- sum(tbl)
+    k <- min(dim(tbl))
+    cramers_v <- sqrt(chi_test$statistic / (n * (k - 1)))
+    
+    chi_results <- rbind(chi_results, 
+                         data.frame(Feature = cat_var,
+                                    p_value = chi_test$p.value,
+                                    Cramers_V = cramers_v))
+  }
+  
+  # Select categorical features with p < 0.05 and Cramér's V > 0.15
+  selected_categorical <- chi_results$Feature[
+    chi_results$p_value < 0.05 & chi_results$Cramers_V > 0.15
+  ]
+  
+  # 3. Check for multicollinearity among selected numeric features
+  if(length(selected_numeric) > 1) {
+    numeric_cor <- cor(data[, selected_numeric], use = "complete.obs")
+    high_cor <- findCorrelation(numeric_cor, cutoff = 0.8)
+    if(length(high_cor) > 0) {
+      selected_numeric <- selected_numeric[-high_cor]
+    }
+  }
+  
+  # Combine selected features
+  all_selected <- c(selected_numeric, as.character(selected_categorical))
+  
+  cat("Selected Features:\n")
+  cat("-----------------\n")
+  cat("Numeric (", length(selected_numeric), "): ", 
+      paste(selected_numeric, collapse = ", "), "\n\n")
+  cat("Categorical (", length(selected_categorical), "): ", 
+      paste(selected_categorical, collapse = ", "), "\n")
+  
+  return(list(
+    numeric = selected_numeric,
+    categorical = as.character(selected_categorical),
+    all = all_selected
+  ))
+}
+
+# Run the pipeline
+selected_features <- feature_selection_pipeline(kidney_data)
+
+# Create dataset with only important features
+important_vars <- selected_features$all
+final_dataset <- kidney_data[, c(important_vars, "target")]
+```
+```{r}
+library(ggplot2)
+
+# Create a feature importance plot
+importance_df <- data.frame(
+  Feature = names(sorted_cor),
+  Correlation = as.numeric(sorted_cor),
+  Type = "Numeric"
+)
+
+# Add categorical features with Cramér's V
+cat_importance <- data.frame(
+  Feature = chi_results$Feature,
+  Correlation = chi_results$Cramers_V,
+  Type = "Categorical"
+)
+
+importance_df <- rbind(importance_df, cat_importance)
+
+# Plot
+ggplot(importance_df, aes(x = reorder(Feature, Correlation), 
+                         y = Correlation, fill = Type)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Feature Importance for CKD Prediction",
+       x = "Features",
+       y = "Correlation / Cramér's V") +
+  theme_minimal() +
+  geom_hline(yintercept = 0.2, linetype = "dashed", color = "red") +
+  annotate("text", x = 2, y = 0.22, label = "Threshold = 0.2", 
+           color = "red", size = 3)
+```
+
+```{r}
+names(importance_df)
+selected_cols <- c(importance_df %>% filter(Correlation >= 0.20) %>% pull(Feature))
+selected_cols
+```
+
+```{r}
+typeof(selected_cols)
+```
+
+
+```{r}
+model_formula <- reformulate(selected_cols, response = "status")
+model_formula
+```
+
+
+```{r}
+# Build logistic regression models on datasets from different imputation methods
+model_original <- glm(model_formula, 
+                      data = ckd_clean, family = binomial, na.action = na.omit)
+model_knn_basic <- glm(model_formula, 
+                 data = ckd_knn_basic, family = binomial)
+model_knn_advanced <- glm(model_formula, 
+                 data = ckd_knn_advanced, family = binomial)
+model_mice <- glm(model_formula, 
+                 data = ckd_mice_imputed, family = binomial)
+model_missForest <- glm(model_formula, 
+                        data = ckd_missForest_imputed, family = binomial)
+
+# Compare model coefficients
+library(broom)
+model_summary <- bind_rows(
+  tidy(model_original) %>% mutate(Method = "Original (CC)"),
+  tidy(model_knn_basic) %>% mutate(Method = "kNN_basic"),
+  tidy(model_knn_advanced) %>% mutate(Method = "kNN_Advanced"),
+  tidy(model_mice) %>% mutate(Method = "MICE"),
+  tidy(model_missForest) %>% mutate(Method = "missForest")
+)
+
+# Plot coefficient comparisons for key predictors
+coef_plot <- model_summary %>%
+  filter(term %in% selected_cols) %>%
+  ggplot(aes(x = term, y = estimate, color = Method)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = estimate - std.error, ymax = estimate + std.error),
+                width = 0.2, position = position_dodge(width = 0.5)) +
+  labs(title = "Comparison of Logistic Regression Coefficients",
+       subtitle = "After different imputation methods",
+       x = "Predictor",
+       y = "Coefficient Estimate") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(coef_plot)
+```
+
+```{r}
+model_knn_advanced
+```
+
+```{r}
+model_original
+```
+```{r}
+table(ckd_clean$status)
+prop.table(table(ckd_clean$status))
+```
+
+
+```{r}
+table(na.omit(ckd_clean)$status)
+prop.table(table(na.omit(ckd_clean)$status))
+```
+
+
+
+ ## 5. Imputation Comparison table
+
+```{r}
+# Load required libraries
+library(dplyr)
+library(tidyr)
+library(kableExtra)
+library(ggplot2)
+
+# Identify missing value positions in original data
+# Get indices of all missing values
+missing_indices <- which(is.na(ckd_clean), arr.ind = TRUE)
+
+# Convert to a dataframe for easier handling
+missing_df <- data.frame(
+  row = missing_indices[, 1],
+  column = colnames(ckd_clean)[missing_indices[, 2]],
+  variable = colnames(ckd_clean)[missing_indices[, 2]]
+)
+
+# Remove duplicates and sort
+missing_df <- missing_df %>%
+  distinct(row, column, .keep_all = TRUE) %>%
+  arrange(row, column)
+
+# Extract original patient characteristics (non-missing values) for context
+extract_context <- function(row_idx, col_names) {
+  patient_data <- ckd_clean[row_idx, ]
+  # Get non-missing values for context
+  context_vars <- append(selected_cols, "status")
+  context_vals <- sapply(context_vars, function(v) {
+    if(v %in% names(patient_data)) {
+      val <- patient_data[[v]]
+      if(is.na(val)) "NA"
+      else as.character(val)
+    } else NA
+  })
+  return(context_vals)
+}
+
+# Get context for each missing value
+context_data <- t(sapply(missing_df$row, extract_context, 
+                         col_names = names(ckd_clean)))
+colnames(context_data) <- paste("Context", colnames(context_data))
+
+# Extract imputed values from different methods
+# Make sure you have these imputed datasets from previous code:
+# ckd_knn_imputed (from kNN imputation)
+# ckd_missForest_imputed (from missForest imputation)
+
+# Function to extract values from imputed datasets
+extract_imputed_values <- function(row_idx, col_name, dataset) {
+  if(col_name %in% colnames(dataset)) {
+    return(dataset[row_idx, col_name])
+  }
+  return(NA)
+}
+
+# Extract values for each missing position
+missing_df$kNN_value <- mapply(extract_imputed_values, 
+                               missing_df$row, missing_df$column,
+                               MoreArgs = list(dataset = ckd_knn_basic))
+
+missing_df$missForest_value <- mapply(extract_imputed_values,
+                                     missing_df$row, missing_df$column,
+                                     MoreArgs = list(dataset = ckd_missForest_imputed))
+
+# For MICE imputation (if you ran it earlier)
+if(exists("ckd_mice_imputed")) {
+  missing_df$MICE_value <- mapply(extract_imputed_values,
+                                 missing_df$row, missing_df$column,
+                                 MoreArgs = list(dataset = ckd_mice_imputed))
+}
+
+# Combine with context
+comparison_table <- cbind(missing_df, context_data)
+
+# Reorder columns for better readability
+comparison_table <- comparison_table %>%
+  select(row, variable, starts_with("Context"), 
+         kNN_value, missForest_value, everything())
+
+# Display first 20 rows of the comparison
+head(comparison_table, 20) %>%
+  kable("latex", caption = "Imputation Comparison at Missing Positions") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  landscape()
+```
+
+
+
+```{r}
+setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
+write_csv(ckd_knn_advanced, "data/processed/dataset_knn_imputed.csv",
+          progress = show_progress())
+```
+
+
+```{r}
+setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
+write_csv(ckd_missForest_imputed, "data/processed/dataset_missForest_imputed.csv",
+          progress = show_progress())
+```
+
+

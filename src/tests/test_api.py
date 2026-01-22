@@ -106,4 +106,8 @@ def test_openapi_schema():
     schema = response.json()
     assert "openapi" in schema
     assert "info" in schema
+<<<<<<< HEAD
     assert schema["info"]["title"] == "Simple ML API"
+=======
+    assert schema["info"]["title"] == "Simple ML API"
+>>>>>>> 73c312b7fac153e2cf6dee1ace2dfb308ee4ba6b
