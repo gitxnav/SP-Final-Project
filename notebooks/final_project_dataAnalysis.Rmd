@@ -1,0 +1,1020 @@
+---
+title: "Final Project - Data Analysis"
+author: "Marco Russo"
+date: "January 23, 2026"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+email: ..
+header-includes:
+- \usepackage{xcolor}
+- \usepackage{framed}
+- \usepackage{listings}
+---
+
+# Objective
+
+Based on the information extracted from [nhs.uk/conditions/kidney-disease](https://www.nhs.uk/conditions/kidney-disease/) the **Chronic Kidney Disease** (CKD) is a long-term condition where damaged kidneys can't effectively filter waste and extra fluid from the blood. It leading to buildup and potential health problems like heart disease, anemia, and high blood pressure, with diabetes and hypertension being leading causes. Often showing few symptoms until advanced stages, requiring lifestyle changes, medications, or, in severe cases, dialysis or transplant to manage its progression.
+
+There are usually no **symptoms of CKD** in the early stages. It may only be diagnosed if you have a blood or urine test for another reason and the results show a possible problem with your kidneys. At a more advanced stage, symptoms can include:
+
+-   tiredness
+-   swollen ankles, feet or hands
+-   shortness of breath
+-   feeling sick
+-   blood in your pee (urine)
+
+The Chronic kidney disease is **usually caused by other conditions** that put a strain on the kidneys. Often it's the result of a combination of different problems. CKD can be caused by:
+
+-   high blood pressure – over time, this can put strain on the small blood vessels in the kidneys and stop the kidneys working properly
+-   diabetes – too much glucose in your blood can damage the tiny filters in the kidneys
+-   high cholesterol – this can cause a build-up of fatty deposits in the blood vessels supplying your kidneys, which can make it harder for them to work properly
+-   kidney infections
+-   glomerulonephritis – kidney inflammation
+-   autosomal dominant polycystic kidney disease – an inherited condition where growths called cysts develop in the kidneys
+-   blockages in the flow of urine – for example, from kidney stones that keep coming back, or an enlarged prostate
+-   long-term, regular use of certain medicines – such as lithium and non-steroidal anti-inflammatory drugs (NSAIDs)
+
+CKD **can be diagnosed** using blood and urine tests. These tests look for high levels of certain substances in the blood and urine that are signs your kidneys are not working properly.
+
+If the person at a high risk of developing kidney disease (for example, it has a known risk factor such as high blood pressure or diabetes), he may be advised to have regular tests to check for CKD so it's found at an early stage.
+
+The results of the blood and urine tests can be used to tell the stage of your kidney disease. This is a number that reflects how severe the damage to your kidneys is, with a higher number indicating more serious CKD.
+
+There's **no cure for CKD**, but treatment can help relieve the symptoms and stop it getting worse. The treatment will depend on how severe the condition is. The main treatments are:
+
+-   lifestyle changes to help you remain as healthy as possible
+-   medicine to control associated problems such as high blood pressure and high cholesterol
+-   medicine that can help the kidneys keep working for longer
+-   dialysis – treatment to replicate some of the kidney's functions (this may be necessary in advanced CKD)
+-   kidney transplant – this may also be necessary in advanced CKD
+
+CKD can range from a mild condition with no or few symptoms, to a very serious condition where the kidneys stop working, sometimes called kidney failure.
+
+Most people with CKD will be able to control their condition with medicine and regular check-ups. CKD only progresses to kidney failure in around 2 in 100 people with the condition.
+
+If someone has CKD, even if it's mild, he's at an increased risk of developing other serious problems, such as cardiovascular disease. This is a group of conditions affecting the heart and blood vessels, which includes heart attack and stroke.
+
+Cardiovascular disease is one of the main causes of death in people with kidney disease, although healthy lifestyle changes and medicine can help reduce your risk of developing it.
+
+------------------------------------------------------------------------
+
+## 1. Research questions
+
+1.  **How do blood markers (creatinine, urea, hemoglobin) correlate with kidney disease progression?**
+2.  **Which combination of features best predicts CKD status?**
+3.  **Are there distinct patient clusters based on their biochemical profiles?**
+4.  **How do demographic factors (age, hypertension, diabetes) interact with biochemical markers?**
+
+------------------------------------------------------------------------
+
+## 2. Dataset loading
+
+The dataset has been downloaded from [PubMed Central](https://pmc.ncbi.nlm.nih.gov/articles/PMC8757418/) and this study has been replicated to study improvements[^1].
+
+[^1]V. Kumar et al., “The Indian Chronic Kidney Disease (ICKD) study: baseline characteristics,” Clin Kidney J, vol. 15, no. 1, pp. 60–69, Jan. 2022, doi: 10.1093/CKJ/SFAB149.
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
+ckd_data <- read_csv("data/raw/chronic_kindey_disease.csv")
+```
+
+```{r}
+summary(ckd_data)
+```
+
+```{r}
+head(ckd_data)
+```
+
+**Attribute Information**
+
+Data Set Information:
+
+We use the following representation to collect the dataset:-
+
+* age - age
+* bp - blood pressure
+* sg - specific gravity
+* al - albumin
+* su - sugar
+* rbc - red blood cells
+* pc - pus cell
+* pcc - pus cell clumps
+* ba - bacteria
+* bgr - blood glucose random
+* bu - blood urea
+* sc - serum creatinine
+* sod - sodium
+* pot - potassium
+* hemo - hemoglobin
+* pcv - packed cell volume
+* wc - white blood cell count
+* rc - red blood cell count
+* htn - hypertension
+* dm - diabetes mellitus
+* cad - coronary artery disease
+* appet - appetite
+* pe - pedal edema
+* ane - anemia
+* class - class
+
+
+**Additional Feature Details**
+
+Attribute Information:
+
+We use 24 + class = 25 ( 11 numeric ,14 nominal)
+
+    Age(numerical) - age in years
+    Blood Pressure(numerical) - bp in mm/Hg
+    Specific Gravity(nominal) - sg - (1.005,1.010,1.015,1.020,1.025)
+    Albumin(nominal) - al - (0,1,2,3,4,5)
+    Sugar(nominal) - su - (0,1,2,3,4,5)
+    Red Blood Cells(nominal) - rbc - (normal,abnormal)
+    Pus Cell (nominal) - pc - (normal,abnormal)
+    Pus Cell clumps(nominal) - pcc - (present,notpresent)
+    Bacteria(nominal) - ba - (present,notpresent)
+    Blood Glucose Random(numerical) - bgr in mgs/dl
+    Blood Urea(numerical) -bu in mgs/dl
+    Serum Creatinine(numerical) - sc in mgs/dl
+    Sodium(numerical) - sod in mEq/L
+    Potassium(numerical) - pot in mEq/L
+    Hemoglobin(numerical) - hemo in gms
+    Packed Cell Volume(numerical)
+    White Blood Cell Count(numerical) - wc in cells/cumm
+    Red Blood Cell Count(numerical) - rc in millions/cmm
+    Hypertension(nominal) - htn - (yes,no)
+    Diabetes Mellitus(nominal) - dm - (yes,no)
+    Coronary Artery Disease(nominal) - cad - (yes,no)
+    Appetite(nominal) - appet - (good,poor)
+    Pedal Edema(nominal) - pe - (yes,no)
+    Anemia(nominal) - ane - (yes,no)
+    Class (nominal)- class - (ckd,notckd)
+
+**Acknowledgements**
+
+https://archive.ics.uci.edu/ml/datasets/Chronic_Kidney_Disease
+
+
+------------------------------------------------------------------------
+
+## 3. Setup and Data Loading
+
+```{r setup, warning=FALSE, message=FALSE}
+# Load required libraries
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("corrplot")) install.packages("corrplot")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("gridExtra")) install.packages("gridExtra")
+if (!require("caret")) install.packages("caret")
+if (!require("mice")) install.packages("mice")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("tidyr")) install.packages("tidyr")
+library(tidyverse)
+library(corrplot)
+library(ggplot2)
+library(gridExtra)
+library(caret)
+library(mice)
+library(dplyr)
+library(tidyr)
+
+if (!require("GGally")) install.packages("GGally")
+if (!require("VIM")) install.packages("VIM")
+if (!require("psych")) install.packages("psych")
+if (!require("car")) install.packages("car")
+if (!require("factoextra")) install.packages("factoextra")
+if (!require("pROC")) install.packages("pROC")
+if (!require("ggpubr")) install.packages("ggpubr")
+if (!require("rstatix")) install.packages("rstatix")
+library(GGally)
+library(VIM)
+library(psych)
+library(lmtest)
+library(car)
+library(factoextra)
+library(pROC)
+library(ggpubr)
+library(rstatix)
+```
+
+
+
+
+```{r}
+# Set seed for reproducibility
+set.seed(17)
+
+# Read data
+setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
+ckd_data <- read.table("data/raw/chronic_kindey_disease.csv", 
+                       sep = ",", 
+                       header = FALSE, 
+                       na.strings = c("?", "NA", ""),
+                       stringsAsFactors = FALSE)
+
+# Set column names based on dataset description
+col_names <- c("age", "bp", "sg", "al", "su", "rbc", "pc", "pcc", "ba", "bgr",
+               "bu", "sc", "sod", "pot", "hemo", "pcv", "wbcc", "rbcc",
+               "htn", "dm", "cad", "appet", "pe", "ane", "status")
+
+names(ckd_data) <- col_names
+
+# Check structure
+str(ckd_data)
+
+```
+
+------------------------------------------------------------------------
+
+## 4. Data cleaning
+
+```{r data_cleaning}
+# Display first few rows with original character format
+head(ckd_data)
+
+# Function to clean and convert numeric columns
+clean_numeric <- function(x) {
+  # Remove any non-numeric characters except decimal points and minus signs
+  x_clean <- gsub("[^0-9.-]", "", x)
+  # Convert to numeric
+  as.numeric(x_clean)
+}
+
+# Function to clean factor columns
+clean_factor <- function(x, levels = NULL) {
+  # Trim whitespace
+  x_clean <- trimws(x)
+  # Convert to factor
+  if(is.null(levels)) {
+    factor(x_clean)
+  } else {
+    factor(x_clean, levels = levels)
+  }
+}
+
+# Identify numeric and factor columns based on dataset description
+numeric_cols <- c("age", "bp", "bgr", "bu", "sc", "sod", "pot", 
+                  "hemo", "pcv", "wbcc", "rbcc")
+
+factor_cols <- c("sg", "al", "su", "rbc", "pc", "pcc", "ba", 
+                 "htn", "dm", "cad", "appet", "pe", "ane", "status")
+
+# Apply cleaning
+ckd_clean <- ckd_data
+
+# Clean numeric columns
+for(col in numeric_cols) {
+  ckd_clean[[col]] <- clean_numeric(ckd_clean[[col]])
+}
+
+# Clean factor columns with appropriate levels
+factor_levels <- list(
+  sg = c("1.005", "1.010", "1.015", "1.020", "1.025"),
+  al = c("0", "1", "2", "3", "4", "5"),
+  su = c("0", "1", "2", "3", "4", "5"),
+  rbc = c("normal", "abnormal"),
+  pc = c("normal", "abnormal"),
+  pcc = c("present", "notpresent"),
+  ba = c("present", "notpresent"),
+  htn = c("yes", "no"),
+  dm = c("yes", "no"),
+  cad = c("yes", "no"),
+  appet = c("good", "poor"),
+  pe = c("yes", "no"),
+  ane = c("yes", "no"),
+  status = c("ckd", "notckd")
+)
+
+for(col in factor_cols) {
+  ckd_clean[[col]] <- clean_factor(ckd_clean[[col]], factor_levels[[col]])
+}
+
+# Check the cleaned data structure
+str(ckd_clean)
+
+# Summary statistics
+summary(ckd_clean)
+
+# Check missing values
+missing_summary <- sapply(ckd_clean, function(x) sum(is.na(x)))
+missing_df <- data.frame(
+  Column = names(missing_summary),
+  Missing_Count = missing_summary,
+  Missing_Percent = round(missing_summary/nrow(ckd_clean)*100, 2)
+) %>%
+  arrange(desc(Missing_Count))
+
+print("Missing Value Summary:")
+print(missing_df)
+```
+
+```{r}
+# Add binary outcome variable
+ckd_clean$status_binary <- ifelse(ckd_clean$status == "ckd", 1, 0)
+
+# Check cleaned structure
+cat("\nCleaned Data Structure:\n")
+str(ckd_clean)
+
+# Summary statistics
+cat("\nSummary Statistics:\n")
+summary(ckd_clean)
+```
+
+
+
+```{r missing_analysis}
+## Missing Data Analysis and Imputation
+
+
+# Calculate missingness
+missing_summary <- data.frame(
+  Variable = names(ckd_clean),
+  Missing_Count = colSums(is.na(ckd_clean)),
+  Missing_Percent = round(colSums(is.na(ckd_clean))/nrow(ckd_clean)*100, 2)
+) %>%
+  arrange(desc(Missing_Percent))
+
+print("Missing Data Summary:")
+print(missing_summary)
+
+# Visualize missing data pattern
+missing_plot <-  aggr(ckd_clean, 
+                     col = c('navyblue', 'red'), 
+                     numbers = TRUE, 
+                     sortVars = TRUE,
+                     labels = names(ckd_clean), 
+                     cex.axis = .7,
+                     gap = 3, 
+                     ylab = c("Missing data pattern", "Pattern"))
+```
+
+
+```{r}
+# Multiple imputation using MICE
+cat("\nPerforming Multiple Imputation...\n")
+imputed_data <- mice(ckd_clean, 
+                     m = 5, 
+                     maxit = 50, 
+                     method = 'pmm', 
+                     seed = 42)
+
+# Extract first imputed dataset
+ckd_imputed <- complete(imputed_data, 1)
+
+# Check imputation quality
+cat("\nMissing values after imputation:", sum(is.na(ckd_imputed)), "\n")
+```
+
+```{r}
+summary(ckd_clean)
+```
+
+
+```{r}
+summary(ckd_imputed)
+```
+
+### Imputation by `logreg`
+
+
+
+
+```{r}
+setwd('/Volumes/HHD_iMac_Storage/URV/SCIENTIFIC_PROGRAMMING/FINAL/SP-Final-Project')
+write_csv(ckd_imputed, "data/processed/dataset_mice_imputed.csv",
+          progress = show_progress())
+```
+```{r}
+null_values <- colSums(is.na(ckd_imputed))
+print(null_values)
+
+
+```
+
+
+
+
+------------------------------------------------------------------------
+
+## 5. Understanding Scatterplots and Bivariate Analysis
+
+```{r scatterplot_basics}
+cat("Scatterplot: A graphical representation showing the relationship between TWO numeric variables.\n")
+cat("Each point represents an observation with coordinates (x, y).\n")
+cat("Used to visualize correlations, clusters, outliers, and patterns.\n\n")
+
+# Basic scatterplot: Age vs Blood Pressure
+ggplot(ckd_imputed, aes(x = age, y = bp)) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Scatterplot: Age vs Blood Pressure",
+       subtitle = "Shows relationship between age and blood pressure",
+       x = "Age (years)",
+       y = "Blood Pressure (mm/Hg)") +
+  theme_minimal()
+
+# Interactive scatterplot with color coding by CKD status
+ggplot(ckd_imputed, aes(x = age, y = bp, color = status)) +
+  geom_point(alpha = 0.7, size = 2) +
+  scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
+  labs(title = "Age vs Blood Pressure by CKD Status",
+       x = "Age",
+       y = "Blood Pressure",
+       color = "CKD Status") +
+  theme_minimal()
+```
+***
+
+## 6. Cohort Analysis: CKD vs NoCKD comparison
+
+```{r}
+cohorts <- ckd_imputed %>%
+  group_by(status) %>%
+  summarise(
+    n = n(),
+    percentage = n()/nrow(ckd_imputed) * 100
+  )
+
+print("Cohort Distribution:")
+print(cohorts)
+```
+
+```{r cohort_analysis}
+# Create a comprehensive comparison table
+create_comparison_table <- function(data) {
+  comparison_results <- data.frame()
+  
+  # List of variables to compare
+  vars_to_compare <- c("age", "bp", "sc", "hemo", "bu", "htn", "dm")
+  
+  for(var in vars_to_compare) {
+    
+    if(is.numeric(data[[var]])) {
+      # For numeric variables: t-test or Wilcoxon
+      ckd_vals <- data[[var]][data$status == "ckd"]
+      non_ckd_vals <- data[[var]][data$status == "notckd"]
+      
+      # Check normality for t-test assumption
+      normality_ckd <- shapiro.test(ckd_vals)$p.value > 0.05
+      normality_nonckd <- shapiro.test(non_ckd_vals)$p.value > 0.05
+      
+      if(normality_ckd && normality_nonckd) {
+        test_result <- t.test(ckd_vals, non_ckd_vals)
+        test_name <- "t-test"
+      } else {
+        test_result <- wilcox.test(ckd_vals, non_ckd_vals)
+        test_name <- "Wilcoxon"
+      }
+      
+      comparison_results <- rbind(comparison_results, data.frame(
+        Variable = var,
+        Type = "Numeric",
+        CKD_Mean = mean(ckd_vals, na.rm = TRUE),
+        CKD_SD = sd(ckd_vals, na.rm = TRUE),
+        NonCKD_Mean = mean(non_ckd_vals, na.rm = TRUE),
+        NonCKD_SD = sd(non_ckd_vals, na.rm = TRUE),
+        Mean_Difference = mean(ckd_vals, na.rm = TRUE) - mean(non_ckd_vals, na.rm = TRUE),
+        Test = test_name,
+        Statistic = ifelse(test_name == "t-test", 
+                          round(test_result$statistic, 3),
+                          round(test_result$statistic, 0)),
+        P_Value = test_result$p.value,
+        Significant = ifelse(test_result$p.value < 0.05, "Yes", "No")
+      ))
+      
+    } else if(is.factor(data[[var]])) {
+      # For categorical variables: chi-square test
+      contingency <- table(data[[var]], data$status)
+      
+      # Check if table has valid dimensions
+      if(nrow(contingency) > 1 && ncol(contingency) > 1) {
+        chi_test <- chisq.test(contingency)
+        
+        # Calculate percentages
+        prop_table <- prop.table(contingency, margin = 2) * 100
+        
+        comparison_results <- rbind(comparison_results, data.frame(
+          Variable = var,
+          Type = "Categorical",
+          CKD_Mean = ifelse("yes" %in% rownames(prop_table),
+                           round(prop_table["yes", "ckd"], 2),
+                           NA),
+          CKD_SD = NA,
+          NonCKD_Mean = ifelse("yes" %in% rownames(prop_table),
+                              round(prop_table["yes", "notckd"], 2),
+                              NA),
+          NonCKD_SD = NA,
+          Mean_Difference = ifelse("yes" %in% rownames(prop_table),
+                                  round(prop_table["yes", "ckd"] - prop_table["yes", "notckd"], 2),
+                                  NA),
+          Test = "Chi-square",
+          Statistic = round(chi_test$statistic, 3),
+          P_Value = chi_test$p.value,
+          Significant = ifelse(chi_test$p.value < 0.05, "Yes", "No")
+        ))
+      }
+    }
+  }
+  
+  return(comparison_results)
+}
+
+# Generate comparison table
+comparison_table <- create_comparison_table(ckd_imputed)
+
+print("Comprehensive Cohort Comparison Table:")
+print(comparison_table %>% arrange(P_Value))
+```
+
+
+
+
+
+```{r visual_cohort_comparison}
+# 1. Age distribution by cohort
+p_age <- ggplot(ckd_imputed, aes(x = status, y = age, fill = status)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, fill = "white", alpha = 0.7) +
+  stat_compare_means(method = "t.test", label = "p.format") +
+  labs(title = "Age Distribution by CKD Status",
+       x = "CKD Status",
+       y = "Age (years)") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# 2. Serum Creatinine distribution
+p_sc <- ggplot(ckd_imputed, aes(x = status, y = sc, fill = status)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, fill = "white", alpha = 0.7) +
+  stat_compare_means(method = "wilcox.test", label = "p.format") +
+  labs(title = "Serum Creatinine by CKD Status",
+       x = "CKD Status",
+       y = "Serum Creatinine (mg/dL)") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# 3. Hemoglobin distribution
+p_hemo <- ggplot(ckd_imputed, aes(x = status, y = hemo, fill = status)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, fill = "white", alpha = 0.7) +
+  stat_compare_means(method = "t.test", label = "p.format") +
+  labs(title = "Hemoglobin by CKD Status",
+       x = "CKD Status",
+       y = "Hemoglobin (g/dL)") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# 4. Blood Pressure distribution
+p_bp <- ggplot(ckd_imputed, aes(x = status, y = bp, fill = status)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.2, fill = "white", alpha = 0.7) +
+  stat_compare_means(method = "t.test", label = "p.format") +
+  labs(title = "Blood Pressure by CKD Status",
+       x = "CKD Status",
+       y = "Blood Pressure (mm/Hg)") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# Arrange plots
+grid.arrange(p_age, p_sc, p_hemo, p_bp, ncol = 2,
+             top = "Key Clinical Parameters by CKD Status")
+
+# 5. Categorical variables visualization
+# Create a function for categorical variable visualization
+plot_categorical <- function(data, var_name) {
+  prop_data <- data %>%
+    group_by(status, !!sym(var_name)) %>%
+    summarise(n = n()) %>%
+    group_by(status) %>%
+    mutate(percentage = n/sum(n) * 100)
+  
+  ggplot(prop_data, aes(x = status, y = percentage, fill = !!sym(var_name))) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_text(aes(label = paste0(round(percentage, 1), "%")),
+              position = position_dodge(width = 0.9),
+              vjust = -0.5, size = 3) +
+    labs(title = paste(var_name, "Distribution by CKD Status"),
+         x = "CKD Status",
+         y = "Percentage (%)",
+         fill = var_name) +
+    scale_fill_brewer(palette = "Set3") +
+    theme_minimal() +
+    ylim(0, 100)
+}
+
+# Plot categorical variables
+p_htn <- plot_categorical(ckd_imputed, "htn")
+p_dm <- plot_categorical(ckd_imputed, "dm")
+
+grid.arrange(p_htn, p_dm, ncol = 2,
+             top = "Comorbidity Distribution by CKD Status")
+```
+
+***
+
+## 7. Correlation Analysis
+
+### Numeric Features Correlation Matrix
+
+```{r correlation_numeric}
+# Select numeric variables
+numeric_vars <- ckd_imputed %>%
+  select(age, bp, bgr, bu, sc, sod, pot, hemo, pcv, wbcc, rbcc) %>%
+  mutate_all(as.numeric)
+
+# Calculate correlation matrix
+cor_matrix <- cor(numeric_vars, use = "pairwise.complete.obs")
+
+# Visualize correlation matrix
+corrplot(cor_matrix, 
+         method = "color",
+         type = "upper",
+         order = "hclust",
+         tl.col = "black",
+         tl.srt = 45,
+         addCoef.col = "black",
+         number.cex = 0.7,
+         title = "Correlation Matrix of Numeric Features",
+         mar = c(0, 0, 2, 0))
+```
+
+***
+
+## 8. Statistical Testing Framework with Hypotheses
+
+```{r statistical_testing_framework}
+cat("=== STATISTICAL HYPOTHESIS TESTING FRAMEWORK ===\n\n")
+
+# Define formal hypotheses
+hypotheses <- data.frame(
+  Hypothesis = c(
+    "H1: CKD patients are older than non-CKD patients",
+    "H2: Serum creatinine is higher in CKD patients",
+    "H3: Hemoglobin is lower in CKD patients",
+    "H4: Hypertension is more prevalent in CKD patients",
+    "H5: Diabetes is more prevalent in CKD patients",
+    "H6: Blood pressure is higher in CKD patients",
+    "H7: Blood urea is higher in CKD patients"
+  ),
+  Test = c("t-test", "Wilcoxon", "t-test", "Chi-square", "Chi-square", "t-test", "t-test"),
+  Alternative = c("greater", "greater", "less", "greater", "greater", "greater", "greater")
+)
+
+print("Research Hypotheses:")
+print(hypotheses)
+
+# Perform all tests
+test_results <- list()
+
+# H1: Age difference
+test_results$age <- t.test(age ~ status, data = ckd_imputed, alternative = "greater")
+
+# H2: Serum creatinine difference (non-parametric due to skewness)
+test_results$sc <- wilcox.test(sc ~ status, data = ckd_imputed, alternative = "greater")
+
+# H3: Hemoglobin difference
+test_results$hemo <- t.test(hemo ~ status, data = ckd_imputed, alternative = "less")
+
+# H4: Hypertension prevalence
+htn_table <- table(ckd_imputed$htn, ckd_imputed$status)
+test_results$htn <- chisq.test(htn_table)
+
+# H5: Diabetes prevalence
+dm_table <- table(ckd_imputed$dm, ckd_imputed$status)
+test_results$dm <- chisq.test(dm_table)
+
+# H6: Blood pressure difference
+test_results$bp <- t.test(bp ~ status, data = ckd_imputed, alternative = "greater")
+
+# H7: Blood urea difference
+test_results$bu <- t.test(bu ~ status, data = ckd_imputed, alternative = "greater")
+
+# Create summary table
+results_summary <- data.frame(
+  Hypothesis = hypotheses$Hypothesis,
+  Test_Statistic = sapply(test_results, function(x) round(x$statistic, 3)),
+  P_Value = sapply(test_results, function(x) round(x$p.value, 4)),
+  Significant = sapply(test_results, function(x) ifelse(x$p.value < 0.05, "Yes", "No")),
+  Effect_Size = c(
+    # Cohen's d for age
+    round((mean(ckd_imputed$age[ckd_imputed$status == "ckd"]) - 
+            mean(ckd_imputed$age[ckd_imputed$status == "notckd"])) /
+           sqrt((sd(ckd_imputed$age[ckd_imputed$status == "ckd"])^2 +
+                 sd(ckd_imputed$age[ckd_imputed$status == "notckd"])^2)/2), 3),
+    # Rank-biserial for creatinine
+    round(wilcox.test(sc ~ status, data = ckd_imputed)$statistic / 
+           (sum(ckd_imputed$status == "ckd") * sum(ckd_imputed$status == "notckd")), 3),
+    # Cohen's d for hemoglobin
+    round((mean(ckd_imputed$hemo[ckd_imputed$status == "ckd"]) - 
+            mean(ckd_imputed$hemo[ckd_imputed$status == "notckd"])) /
+           sqrt((sd(ckd_imputed$hemo[ckd_imputed$status == "ckd"])^2 +
+                 sd(ckd_imputed$hemo[ckd_imputed$status == "notckd"])^2)/2), 3),
+    # Phi coefficient for hypertension
+    round(sqrt(test_results$htn$statistic / nrow(ckd_imputed)), 3),
+    # Phi coefficient for diabetes
+    round(sqrt(test_results$dm$statistic / nrow(ckd_imputed)), 3),
+    # Cohen's d for blood pressure
+    round((mean(ckd_imputed$bp[ckd_imputed$status == "ckd"]) - 
+            mean(ckd_imputed$bp[ckd_imputed$status == "notckd"])) /
+           sqrt((sd(ckd_imputed$bp[ckd_imputed$status == "ckd"])^2 +
+                 sd(ckd_imputed$bp[ckd_imputed$status == "notckd"])^2)/2), 3),
+    # Cohen's d for blood urea
+    round((mean(ckd_imputed$bu[ckd_imputed$status == "ckd"]) - 
+            mean(ckd_imputed$bu[ckd_imputed$status == "notckd"])) /
+           sqrt((sd(ckd_imputed$bu[ckd_imputed$status == "ckd"])^2 +
+                 sd(ckd_imputed$bu[ckd_imputed$status == "notckd"])^2)/2), 3)
+  )
+)
+
+print("\nStatistical Test Results:")
+print(results_summary)
+
+# Multiple comparison adjustment
+adjusted_p <- p.adjust(results_summary$P_Value, method = "BH")
+results_summary$Adjusted_P <- round(adjusted_p, 4)
+results_summary$Significant_Adjusted <- ifelse(adjusted_p < 0.05, "Yes", "No")
+
+print("\nResults with Benjamini-Hochberg Correction:")
+print(results_summary[, c("Hypothesis", "P_Value", "Adjusted_P", "Significant_Adjusted")])
+```
+
+***
+
+## 9. Multivariate Analysis
+
+```{r multivariate_analysis_fixed}
+# Logistic regression to identify independent predictors
+logit_model <- glm(status_binary ~ age + bp + sc + hemo + bu + htn + dm,
+                   data = ckd_imputed,
+                   family = binomial())
+
+cat("=== LOGISTIC REGRESSION MODEL ===\n\n")
+summary(logit_model)
+
+# Calculate odds ratios with confidence intervals
+or_ci <- exp(cbind(OR = coef(logit_model), confint(logit_model)))
+print("Odds Ratios with 95% Confidence Intervals:")
+print(round(or_ci, 3))
+
+# Model performance metrics
+# ROC curve
+if(require(pROC)) {
+  roc_curve <- roc(ckd_imputed$status_binary, predict(logit_model, type = "response"))
+  auc_value <- auc(roc_curve)
+  
+  cat(sprintf("\nModel Performance:\n"))
+  cat(sprintf("AUC: %.3f (95%% CI: %.3f-%.3f)\n",
+              auc_value,
+              ci.auc(roc_curve)[1],
+              ci.auc(roc_curve)[3]))
+  
+  # Find optimal cutoff
+  optimal_cutoff <- coords(roc_curve, "best", ret = "threshold")$threshold
+  
+  # Make predictions
+  predictions <- ifelse(predict(logit_model, type = "response") >= optimal_cutoff, 1, 0)
+  
+  # Confusion matrix
+  conf_matrix <- table(Predicted = predictions, Actual = ckd_imputed$status_binary)
+  
+  # Calculate metrics
+  accuracy <- sum(diag(conf_matrix))/sum(conf_matrix)
+  sensitivity <- conf_matrix[2,2]/sum(conf_matrix[,2])
+  specificity <- conf_matrix[1,1]/sum(conf_matrix[,1])
+  
+  cat(sprintf("Optimal Cutoff: %.3f\n", optimal_cutoff))
+  cat(sprintf("Accuracy: %.1f%%\n", accuracy * 100))
+  cat(sprintf("Sensitivity: %.1f%%\n", sensitivity * 100))
+  cat(sprintf("Specificity: %.1f%%\n", specificity * 100))
+}
+
+# Variable importance plot
+var_importance <- data.frame(
+  Variable = names(coef(logit_model))[-1],  # Exclude intercept
+  Coefficient = abs(coef(logit_model)[-1])
+) %>%
+  arrange(desc(Coefficient))
+
+ggplot(var_importance, aes(x = reorder(Variable, Coefficient), y = Coefficient)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Variable Importance in Logistic Regression Model",
+       x = "Variable",
+       y = "Absolute Coefficient Value") +
+  theme_minimal()
+```
+
+***
+
+## 10. Cohort Stratification Analysis
+
+
+```{r cohort_stratification}
+# Create risk categories based on key parameters
+ckd_stratified <- ckd_imputed %>%
+  mutate(
+    # Age categories
+    age_category = cut(age,
+                      breaks = c(0, 45, 60, 90),
+                      labels = c("Young (<45)", "Middle (45-60)", "Senior (>60)")),
+    
+    # Creatinine categories
+    sc_category = cut(sc,
+                     breaks = c(0, 1.2, 2.5, Inf),
+                     labels = c("Normal (<1.2)", "Elevated (1.2-2.5)", "High (>2.5)")),
+    
+    # Hemoglobin categories
+    hemo_category = cut(hemo,
+                       breaks = c(0, 12, 13.5, Inf),
+                       labels = c("Anemic (<12)", "Borderline (12-13.5)", "Normal (>13.5)")),
+    
+    # Blood pressure categories
+    bp_category = cut(bp,
+                     breaks = c(0, 120, 140, Inf),
+                     labels = c("Normal (<120)", "Prehypertensive (120-140)", "Hypertensive (>140)"))
+  )
+
+# Analyze CKD prevalence across strata
+strata_analysis <- function(data, strat_var) {
+  data %>%
+    group_by(!!sym(strat_var), status) %>%
+    summarise(n = n()) %>%
+    group_by(!!sym(strat_var)) %>%
+    mutate(
+      total = sum(n),
+      percentage = n/total * 100
+    ) %>%
+    filter(status == "ckd") %>%
+    select(!!sym(strat_var), ckd_count = n, total_patients = total, ckd_percentage = percentage)
+}
+
+# Apply to all strata
+age_strata <- strata_analysis(ckd_stratified, "age_category")
+sc_strata <- strata_analysis(ckd_stratified, "sc_category")
+hemo_strata <- strata_analysis(ckd_stratified, "hemo_category")
+bp_strata <- strata_analysis(ckd_stratified, "bp_category")
+
+print("CKD Prevalence by Age Category:")
+print(age_strata)
+
+print("\nCKD Prevalence by Creatinine Category:")
+print(sc_strata)
+
+print("\nCKD Prevalence by Hemoglobin Category:")
+print(hemo_strata)
+
+print("\nCKD Prevalence by Blood Pressure Category:")
+print(bp_strata)
+
+# Visualize strata
+plot_strata <- function(strata_data, title) {
+  ggplot(strata_data, aes(x = reorder(!!sym(names(strata_data)[1]), ckd_percentage), 
+                         y = ckd_percentage)) +
+    geom_bar(stat = "identity", fill = "darkred", alpha = 0.7) +
+    geom_text(aes(label = paste0(round(ckd_percentage, 1), "%")), 
+              vjust = -0.5, size = 4) +
+    labs(title = title,
+         x = "Category",
+         y = "CKD Prevalence (%)") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    ylim(0, 100)
+}
+
+p1 <- plot_strata(age_strata, "CKD Prevalence by Age Category")
+p2 <- plot_strata(sc_strata, "CKD Prevalence by Creatinine Category")
+p3 <- plot_strata(hemo_strata, "CKD Prevalence by Hemoglobin Category")
+p4 <- plot_strata(bp_strata, "CKD Prevalence by Blood Pressure Category")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2,
+             top = "CKD Prevalence Across Clinical Strata")
+```
+
+
+
+------------------------------------------------------------------------
+
+## 11. Creating New Features (Feature Engineering)
+
+```{r feature_engineering}
+# Create new features based on domain knowledge
+ckd_features <- ckd_imputed %>%
+  mutate(
+    # 1. Age groups
+    age_group = case_when(
+      age < 18 ~ "Child",
+      age >= 18 & age < 45 ~ "Young Adult",
+      age >= 45 & age < 60 ~ "Middle Aged",
+      age >= 60 ~ "Senior"
+    ),
+    
+    # 2. Blood Pressure categories
+    bp_category = case_when(
+      bp < 90 ~ "Low",
+      bp >= 90 & bp < 120 ~ "Normal",
+      bp >= 120 & bp < 140 ~ "Prehypertension",
+      bp >= 140 ~ "Hypertension"
+    ),
+    
+    # 3. Anemia indicator based on hemoglobin
+    anemia_hemo = ifelse(hemo < 12, "Anemic", "Normal"),
+    
+    # 4. Kidney function ratio (Creatinine/Urea ratio)
+    kidney_ratio = sc/bu,
+    
+    # 5. Electrolyte imbalance flag
+    electrolyte_imbalance = ifelse(sod < 135 | pot > 5.5, "Imbalanced", "Normal"),
+    
+    # 6. Combined risk score
+    risk_score = (as.numeric(htn == "yes") * 2) + 
+                 (as.numeric(dm == "yes") * 2) + 
+                 (as.numeric(age > 60) * 1) +
+                 (as.numeric(sc > 1.2) * 3),
+    
+    # 7. Creatinine clearance estimate (simplified)
+    creatinine_clearance = (140 - age) * (1/ifelse(sc > 0, sc, 1)),
+    
+    # 8. Hemoglobin to PCV ratio
+    hemo_pcv_ratio = hemo/pcv
+  )
+
+# Convert new categorical features to factors
+ckd_features <- ckd_features %>%
+  mutate(
+    age_group = factor(age_group, levels = c("Child", "Young Adult", "Middle Aged", "Senior")),
+    bp_category = factor(bp_category, levels = c("Low", "Normal", "Prehypertension", "Hypertension")),
+    anemia_hemo = factor(anemia_hemo, levels = c("Normal", "Anemic")),
+    electrolyte_imbalance = factor(electrolyte_imbalance, levels = c("Normal", "Imbalanced"))
+  )
+
+# Display new features
+str(ckd_features[, c("age_group", "bp_category", "anemia_hemo", "kidney_ratio", 
+                     "risk_score", "creatinine_clearance")])
+```
+
+## 12. Bivariate Analysis with Scatterplots
+
+```{r bivariate_analysis}
+# Create a comprehensive scatterplot matrix for key numeric variables
+key_vars <- c("age", "bp", "bgr", "bu", "sc", "hemo", "pcv", "status")
+
+scatter_matrix <- ckd_features %>%
+  select(all_of(key_vars)) %>%
+  na.omit()
+
+# Custom scatterplot function
+create_scatterplot <- function(data, x_var, y_var) {
+  ggplot(data, aes_string(x = x_var, y = y_var, color = "status")) +
+    geom_point(alpha = 0.6, size = 2) +
+    geom_smooth(method = "lm", se = FALSE, alpha = 0.3) +
+    scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
+    labs(title = paste(y_var, "vs", x_var),
+         x = x_var,
+         y = y_var) +
+    theme_minimal() +
+    theme(legend.position = "none")
+}
+
+# Create multiple scatterplots
+p1 <- create_scatterplot(ckd_features, "age", "sc")
+p2 <- create_scatterplot(ckd_features, "age", "hemo")
+p3 <- create_scatterplot(ckd_features, "bp", "bu")
+p4 <- create_scatterplot(ckd_features, "sc", "hemo")
+
+# Arrange in grid
+grid.arrange(p1, p2, p3, p4, ncol = 2, 
+             top = "Bivariate Analysis: Relationships Between Key Variables")
+
+# Interactive scatterplot with size encoding
+ggplot(ckd_features, aes(x = sc, y = hemo, color = status, size = age)) +
+  geom_point(alpha = 0.7) +
+  scale_color_manual(values = c("ckd" = "red", "notckd" = "green")) +
+  labs(title = "Scatterplot with Size Encoding",
+       subtitle = "Size represents age, color represents CKD status",
+       x = "Serum Creatinine",
+       y = "Hemoglobin") +
+  theme_minimal()
+```
+
+
+
+***
+
+TBD
+
+
+## 10. Linear Modeling
+
