@@ -223,6 +223,16 @@ class ModelTrainer:
         
         logger.info(f"Best parameters: {best_params}")
         
+        # Get feature importances
+        feature_importances = best_model.feature_importances_
+        logger.info(f"Feature importances: {feature_importances}")
+
+        # Get feature names
+        feature_names = X_train.columns.tolist() if hasattr(X_train, 'columns') else [f'feature_{i}' for i in range(X_train.shape[1])]
+
+        # Plot feature importances
+        self._plot_feature_importances(feature_importances, feature_names, "Gradient Boosting")
+        
         # Predictions
         y_pred = best_model.predict(X_test)
         
@@ -275,6 +285,16 @@ class ModelTrainer:
         best_params = grid_search.best_params_
         
         logger.info(f"Best parameters: {best_params}")
+        
+        # Get feature importances
+        feature_importances = best_model.feature_importances_
+        logger.info(f"Feature importances: {feature_importances}")
+
+        # Get feature names
+        feature_names = X_train.columns.tolist() if hasattr(X_train, 'columns') else [f'feature_{i}' for i in range(X_train.shape[1])]
+
+        # Plot feature importances
+        self._plot_feature_importances(feature_importances, feature_names, "HistGradientBoosting")
         
         # Predictions
         y_pred = best_model.predict(X_test)
@@ -350,6 +370,29 @@ class ModelTrainer:
         plt.close()
         logger.info(f"{model_name} confusion matrix saved to {fig_path}")
     
+    def _plot_feature_importances(self, feature_importances, feature_names, model_name):
+        """Plot feature importances"""      
+        # Create DataFrame and sort
+        importance_df = pd.DataFrame({
+            'feature': feature_names,
+            'importance': feature_importances
+        }).sort_values('importance', ascending=True)  # Ascending for horizontal bar
+        
+        # Plot
+        plt.figure(figsize=(10, max(6, len(feature_names) * 0.3)))
+        plt.barh(importance_df['feature'], importance_df['importance'])
+        plt.xlabel('Importance')
+        plt.ylabel('Feature')
+        plt.title(f'{model_name} - Feature Importances')
+        plt.tight_layout()
+        
+        # Save plot
+        plot_path = self.figures_dir / f'{model_name.lower()}_feature_importances.png'
+        plt.savefig(plot_path)
+        plt.close()
+        logger.info(f"Feature importance plot saved to {plot_path}")
+
+
     def save_results(self):
         """Save all model results to JSON"""
         results_path = self.reports_dir / 'model_comparison.json'

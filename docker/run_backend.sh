@@ -10,4 +10,4 @@ done
 echo "MLflow is ready, starting backend..."
 
 # Start the application
-exec uvicorn backend.api.main:app --host 0.0.0.0 --port ${PORT:-8000}
+exec uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000}

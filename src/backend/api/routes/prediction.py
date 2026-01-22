@@ -85,7 +85,7 @@ def load_models() -> int:
     """Load all models from the models directory"""
     global models
     
-    models_dir = Path("backend/models")
+    models_dir = Path("models")
     
     # Your existing model files
     model_files = {

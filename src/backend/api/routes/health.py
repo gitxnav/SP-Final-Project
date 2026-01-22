@@ -39,7 +39,7 @@ async def health_check():
     """
     try:
         # Import models from prediction router
-        from backend.api.routes.prediction import models
+        from api.routes.prediction import models
         
         # Check MLflow connection
         mlflow_status = "healthy"
@@ -99,7 +99,7 @@ async def readiness_check():
     Returns 200 if service is ready to accept requests
     """
     try:
-        from backend.api.routes.prediction import models
+        from api.routes.prediction import models
         
         # Check if models are loaded
         if not models:

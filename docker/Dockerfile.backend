@@ -14,15 +14,15 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
-COPY src/backend/ /app/backend/
+COPY src/backend/ /app/
 COPY data/ /app/data/
 
 # Create directories
-RUN mkdir -p /app/mlruns /app/backend/models
+RUN mkdir -p /app/mlruns /models
 
 # Copy entrypoint script
 COPY docker/run_backend.sh /app/
-RUN chmod +x /app/run_backend.sh
+RUN chmod +x run_backend.sh
 
 # Create non-root user
 RUN useradd -m -u 1001 appuser && \
@@ -36,4 +36,5 @@ EXPOSE 8000 5050
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
-ENTRYPOINT ["./run_backend.sh"]
+# ENTRYPOINT ["./run_backend.sh"]
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

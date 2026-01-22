@@ -1,10 +1,12 @@
 """
 Model Training Module with MLflow Integration
-Handles training of KNN, SVM, and Gradient Boosting models with experiment tracking
+Adapted from your existing training code
 """
 
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for Docker
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
@@ -17,7 +19,15 @@ import time
 # MLflow imports
 import mlflow
 import mlflow.sklearn
-from step06_mlflow_config import MLflowConfig
+
+# Import MLflow config
+try:
+    from config.mlflow_config import MLflowConfig
+except ImportError:
+    # Fallback for direct script execution
+    import sys
+    sys.path.append(str(Path(__file__).parent.parent.parent))
+    from config.mlflow_config import MLflowConfig
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -27,7 +37,7 @@ from sklearn.metrics import (
     confusion_matrix, precision_score, recall_score, 
     f1_score, accuracy_score, classification_report
 )
-from sklearn.preprocessing import LabelEncoder
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -58,9 +68,13 @@ class ModelTrainerMLflow:
         self.results = {}
         
         # Initialize MLflow
-        self.mlflow_config = MLflowConfig(experiment_name=experiment_name)
-        logger.info(f"MLflow tracking URI: {mlflow.get_tracking_uri()}")
-        logger.info(f"MLflow experiment: {experiment_name}")
+        try:
+            self.mlflow_config = MLflowConfig(experiment_name=experiment_name)
+            logger.info(f"MLflow tracking URI: {mlflow.get_tracking_uri()}")
+            logger.info(f"MLflow experiment: {experiment_name}")
+        except Exception as e:
+            logger.warning(f"MLflow initialization warning: {str(e)}")
+            self.mlflow_config = None
     
     def load_data(self, data_path: str, test_size: float = 0.2, random_state: int = 42) -> Tuple:
         """Load data and split into train/test sets"""
@@ -68,8 +82,7 @@ class ModelTrainerMLflow:
         
         df = pd.read_csv(data_path)
         
-        le = LabelEncoder()
-        y = le.fit_transform(df['status'])
+        y = df['status']
         X = df.drop(['status'], axis=1)
         
         X_train, X_test, y_train, y_test = train_test_split(
@@ -97,7 +110,6 @@ class ModelTrainerMLflow:
             mlflow.log_param("train_size", len(X_train))
             mlflow.log_param("test_size", len(X_test))
             mlflow.log_param("n_features", X_train.shape[1])
-            mlflow.log_param("feature_names", list(X_train.columns))
             
             # Define model and parameter grid
             knn = KNeighborsClassifier()
@@ -106,7 +118,6 @@ class ModelTrainerMLflow:
             # Log search configuration
             mlflow.log_param("cv_folds", 10)
             mlflow.log_param("scoring_metric", "f1")
-            mlflow.log_param("search_space", "n_neighbors: 1-30 (step 2)")
             
             # GridSearch with cross-validation
             grid_search = GridSearchCV(knn, param_grid, cv=10, scoring='f1', n_jobs=-1)
@@ -160,9 +171,10 @@ class ModelTrainerMLflow:
                 registered_model_name="KNN_CKD_Detector"
             )
             
-            # Save model locally (backward compatibility)
+            # Save model locally
             model_path = self.models_dir / 'knn_model.pkl'
             joblib.dump(knn_final, model_path)
+            logger.info(f"Model saved to {model_path}")
             
             # Create and log visualizations
             self._plot_knn_optimization(np.arange(1, 31, 2), grid_search.cv_results_['mean_test_score'], best_k)
@@ -180,7 +192,6 @@ class ModelTrainerMLflow:
             # Store additional info
             results['best_params'] = {'n_neighbors': best_k}
             results['cv_score'] = best_score
-            results['grid_results'] = grid_search.cv_results_['mean_test_score']
             results['mlflow_run_id'] = run.info.run_id
             results['training_time'] = training_time
             
@@ -264,6 +275,7 @@ class ModelTrainerMLflow:
             # Save locally
             model_path = self.models_dir / 'svm_model.pkl'
             joblib.dump(best_svm, model_path)
+            logger.info(f"Model saved to {model_path}")
             
             # Create and log visualization
             self._plot_confusion_matrix(y_test, y_pred, "SVM")
@@ -348,12 +360,6 @@ class ModelTrainerMLflow:
             training_time = time.time() - start_time
             mlflow.log_metric("training_time_seconds", training_time)
             
-            # Log feature importance if available
-            if hasattr(best_model, 'feature_importances_'):
-                feature_importance = dict(zip(X_train.columns, best_model.feature_importances_))
-                for feat, importance in feature_importance.items():
-                    mlflow.log_metric(f"feature_importance_{feat}", importance)
-            
             # Log model
             mlflow.sklearn.log_model(
                 best_model,
@@ -364,6 +370,7 @@ class ModelTrainerMLflow:
             # Save locally
             model_path = self.models_dir / 'gb_imputed_model.pkl'
             joblib.dump(best_model, model_path)
+            logger.info(f"Model saved to {model_path}")
             
             # Create and log visualization
             self._plot_confusion_matrix(y_test, y_pred, "GradientBoosting_Imputed")
@@ -392,7 +399,6 @@ class ModelTrainerMLflow:
             mlflow.set_tag("model_type", "HistGradientBoosting")
             mlflow.set_tag("algorithm", "Histogram Gradient Boosting")
             mlflow.set_tag("dataset", "imputed")
-            mlflow.set_tag("handles_missing", "native")
             
             # Log dataset info
             mlflow.log_param("train_size", len(X_train))
@@ -461,6 +467,7 @@ class ModelTrainerMLflow:
             # Save locally
             model_path = self.models_dir / 'hist_gb_model.pkl'
             joblib.dump(best_model, model_path)
+            logger.info(f"Model saved to {model_path}")
             
             # Create and log visualization
             self._plot_confusion_matrix(y_test, y_pred, "HistGradientBoosting")
@@ -484,10 +491,10 @@ class ModelTrainerMLflow:
         
         metrics = {
             'model': model_name,
-            'accuracy': accuracy_score(y_test, y_pred),
-            'precision': precision_score(y_test, y_pred),
-            'recall': recall_score(y_test, y_pred),
-            'f1_score': f1_score(y_test, y_pred),
+            'accuracy': float(accuracy_score(y_test, y_pred)),
+            'precision': float(precision_score(y_test, y_pred)),
+            'recall': float(recall_score(y_test, y_pred)),
+            'f1_score': float(f1_score(y_test, y_pred)),
             'confusion_matrix': cm.tolist(),
             'classification_report': classification_report(y_test, y_pred, output_dict=True)
         }
@@ -555,7 +562,7 @@ class ModelTrainerMLflow:
 
 
 def main():
-    """Main execution function"""
+    """Main execution function for direct script execution"""
     logger.info("Starting model training pipeline with MLflow...")
     
     trainer = ModelTrainerMLflow(experiment_name="CKD_Detection")
@@ -573,7 +580,13 @@ def main():
     print("TRAINING MODELS WITH NORMALIZED DATA")
     print("="*60)
     
-    X_train, X_test, y_train, y_test = trainer.load_data('data/processed/ckd_normalized.csv')
+    normalized_path = 'data/processed/ckd_normalized.csv'
+    if not Path(normalized_path).exists():
+        print(f"❌ Error: {normalized_path} not found!")
+        print("Please run data processing first.")
+        return
+    
+    X_train, X_test, y_train, y_test = trainer.load_data(normalized_path)
     
     print("\n[1/4] Training KNN...")
     knn_results = trainer.train_knn(X_train, X_test, y_train, y_test)
@@ -590,11 +603,17 @@ def main():
     print("TRAINING MODELS WITH IMPUTED DATA")
     print("="*60)
     
-    X_train, X_test, y_train, y_test = trainer.load_data('data/processed/ckd_imputed.csv')
+    imputed_path = 'data/processed/ckd_imputed.csv'
+    if not Path(imputed_path).exists():
+        print(f"❌ Error: {imputed_path} not found!")
+        print("Please run data processing first.")
+        return
+    
+    X_train, X_test, y_train, y_test = trainer.load_data(imputed_path)
     
     print("\n[3/4] Training Gradient Boosting...")
     gb_results = trainer.train_gradient_boosting_imputed(X_train, X_test, y_train, y_test)
-    trainer.results['GradientBoosting_Imputed'] = gb_results
+    trainer.results['GradientBoosting'] = gb_results
     print(f"✅ GB - F1: {gb_results['f1_score']:.4f} | Run ID: {gb_results['mlflow_run_id']}")
     
     print("\n[4/4] Training Histogram Gradient Boosting...")
@@ -615,7 +634,7 @@ def main():
     
     print(f"\n🏆 Best Model: {summary['best_model']}")
     print(f"\n📊 View all experiments in MLflow UI:")
-    print(f"   mlflow ui")
+    print(f"   mlflow ui --port 5050")
     print(f"   http://localhost:5050")
 
 

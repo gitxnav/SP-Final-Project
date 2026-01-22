@@ -11,7 +11,7 @@ docker-compose down
 
 # Build and start services
 echo "🔨 Building and starting services..."
-docker-compose up -d --build
+docker-compose up -d --build --force-recreate
 
 # Wait for services
 echo "⏳ Waiting for services to be healthy..."

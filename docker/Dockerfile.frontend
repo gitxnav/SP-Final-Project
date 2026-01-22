@@ -3,12 +3,12 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Create necessary directories
-RUN mkdir -p ./frontend/models \
-    && mkdir -p ./frontend/logs \
-    && mkdir -p ./frontend/output \
-    && mkdir -p ./frontend/reports \
-    && mkdir -p ./frontend/figures \
-    && mkdir -p ./frontend/data
+RUN mkdir -p internal/models \
+    internal/logs \
+    internal/output \
+    internal/reports \
+    internal/figures \
+    internal/data
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -20,13 +20,13 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy frontend code
-COPY src/frontend/internal/ /app/frontend/
-COPY data/ /app/frontend/data/
-COPY src/frontend/utils/ /app/frontend/utils/
+COPY src/frontend/ /app/
+COPY data/ /app/data/
+COPY src/frontend/utils/ /app/utils/
 
 # Copy entrypoint script
-COPY docker/run_app.sh /app/frontend/
-RUN chmod +x /app/frontend/run_app.sh
+COPY docker/run_app.sh /app/
+RUN chmod +x run_app.sh
 
 # Create non-root user
 RUN useradd -m -u 1001 appuser && \
@@ -36,4 +36,5 @@ USER appuser
 
 EXPOSE 8501 8502
 
-ENTRYPOINT ["./run_app.sh"]
+# ENTRYPOINT ["./run_app.sh"]
+CMD ["streamlit", "run", "internal/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]

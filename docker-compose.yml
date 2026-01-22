@@ -30,10 +30,10 @@ services:
       - PYTHONPATH=/app
       - PORT=${PORT:-8000}
     volumes:
-      - ./src/backend:/app/backend
+      - ./src/backend:/app
       - ./data:/app/data
       - mlflow-data:/app/mlruns
-      - model-artifacts:/app/backend/models
+      - model-artifacts:/app/models
     ports:
       - "${PORT:-8000}:8000"
     networks:
@@ -54,12 +54,13 @@ services:
       context: .
       dockerfile: docker/Dockerfile.frontend
     container_name: ckd-frontend-internal
-    command: streamlit run frontend/app.py --server.port 8501 --server.address 0.0.0.0
+    command: streamlit run internal/app.py --server.port 8501 --server.address 0.0.0.0
     environment:
       - API_URL=http://backend:8000
       - PYTHONPATH=/app
     volumes:
-      - ./src/frontend:/app/frontend
+      - ./src/frontend:/app
+      - ./data:/app/data
     ports:
       - "8501:8501"
     networks:

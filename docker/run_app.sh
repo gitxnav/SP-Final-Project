@@ -21,9 +21,8 @@ echo "📂 Current directory: $(pwd)"
 echo "🚀 Launching Streamlit application..."
 echo ""
 
-streamlit run frontend/app.py --server.port 8501 --server.address 0.0.0.0
 
-#CMD ["streamlit", "run", "frontend/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+CMD ["streamlit", "run", "app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
 
 # Alternative: Run with custom port
 # streamlit run src/app.py --server.port 8502
